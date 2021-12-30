@@ -1237,8 +1237,8 @@ class MessageBox(urwid.Pile):
                 if text:
                     markup.append(unrendered_template.format(text))
             elif tag in ("h1", "h2", "h3", "h4", "h5", "h6"):
-                # HEADING STYLE (for all heading style tags – h1 to h6)
-                markup.append(("msg_heading", tag_text))
+                # HEADING STYLE (h1 to h6)
+                markup.append(("msg_heading", cls.soup2markup(element, metadata)[0]))
             elif tag in ("p", "del"):
                 # PARAGRAPH, STRIKE-THROUGH
                 markup.extend(cls.soup2markup(element, metadata)[0])
