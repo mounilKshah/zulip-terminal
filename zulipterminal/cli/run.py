@@ -344,6 +344,7 @@ def main(options: Optional[List[str]] = None) -> None:
 
     if args.debug:
         debug_path: Optional[str] = "debug.log"
+
         assert isinstance(debug_path, str)
         print(
             "NOTE: Debug mode enabled:"

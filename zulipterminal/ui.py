@@ -31,7 +31,11 @@ class View(urwid.WidgetWrap):
     """
 
     def __init__(self, controller: Any) -> None:
+        # print("================ Printing controller in View ================\n")
+        # print(controller)
         self.controller = controller
+        # print("================ Printing self.controller ================\n")
+        # print(self.controller[0])
         self.palette = controller.theme
         self.model = controller.model
         self.users = self.model.users
@@ -233,8 +237,16 @@ class View(urwid.WidgetWrap):
             self.body.focus_position = 1
 
     def keypress(self, size: urwid_Box, key: str) -> Optional[str]:
+        print("================ Printing the key ================\n")
+        print(key)
+        # i = 0
+        print(self.controller.is_in_editor_mode())
+        # i = i+1
+        # print(self.write_box)  
         self.model.new_user_input = True
         if self.controller.is_in_editor_mode():
+            # if key == 'enter':
+            print("Is in editor mode\n")
             return self.controller.current_editor().keypress((size[1],), key)
         # Redirect commands to message_view.
         elif (
@@ -252,6 +264,9 @@ class View(urwid.WidgetWrap):
         elif is_command_key("ALL_PM", key):
             self.pm_button.activate(key)
         elif is_command_key("ALL_STARRED", key):
+            print("================ALL_STARRED was called ================\n")
+            print(key)
+            # print(self.write_box)
             self.starred_button.activate(key)
         elif is_command_key("ALL_MENTIONS", key):
             self.mentioned_button.activate(key)
