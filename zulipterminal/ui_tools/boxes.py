@@ -1769,14 +1769,14 @@ class MessageBox(urwid.Pile):
                 self.model.controller.view.write_box.private_box_view(
                     recipient_user_ids=self.recipient_ids,
                 )
-            elif self.message["type"] == "stream":
-                # if not unauthorised_warning(self.model,
-                #                             self.message.get('stream_id')):
-                #     self.model.controller.view.write_box.stream_box_view(
-                #         caption=self.message['display_recipient'],
-                #         title=self.message['subject'],
-                #         stream_id=self.stream_id,
-                #     )
+            # elif self.message["type"] == "stream":
+            #     if not unauthorised_warning(self.model,
+            #                                 self.message.get('stream_id')):
+            #         self.model.controller.view.write_box.stream_box_view(
+            #             caption=self.message['display_recipient'],
+            #             title=self.message['subject'],
+            #             stream_id=self.stream_id,
+            #         )
                 self.model.controller.view.write_box.stream_box_view(
                     caption=self.message["display_recipient"],
                     title=self.message["subject"],

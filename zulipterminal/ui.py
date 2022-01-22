@@ -237,7 +237,7 @@ class View(urwid.WidgetWrap):
             self.body.focus_position = 1
 
     def keypress(self, size: urwid_Box, key: str) -> Optional[str]:
-        print("================ Printing the key ================\n")
+        print("================ Printing the key ================")
         print(key)
         # i = 0
         print(self.controller.is_in_editor_mode())
