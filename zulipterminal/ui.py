@@ -234,8 +234,16 @@ class View(urwid.WidgetWrap):
             self.body.focus_position = 1
 
     def keypress(self, size: urwid_Box, key: str) -> Optional[str]:
+        print("================ Printing the key ================")
+        print(key)
+        # i = 0
+        print(self.controller.is_in_editor_mode())
+        # i = i+1
+        # print(self.write_box)  
         self.model.new_user_input = True
         if self.controller.is_in_editor_mode():
+            # if key == 'enter':
+            print("Is in editor mode\n")
             return self.controller.current_editor().keypress((size[1],), key)
         # Redirect commands to message_view.
         elif (

@@ -535,6 +535,119 @@ def match_topics(topic_names: List[str], search_text: str) -> List[str]:
 DataT = TypeVar("DataT")
 
 
+def unauthorised_warning(model: Any, stream_identifier: Any) -> bool:
+    """
+    Identify target stream based on stream id or stream name
+    and update footer based on the user rights.
+    """
+    stream_policy = model.stream_dict[stream_identifier].get('stream_post_policy')
+    user_role = model.get_user_info(model.user_id).get('role')
+    print("----------------- Printing data from unauthorised warning -----------------")
+    print("Post policy: ", stream_policy)
+    print("user role: ", user_role)
+    print("stream identifier: ", stream_identifier)
+
+    # print("__________________ self.message[type] is stream ________________")
+    # NOTE: User_id of mounil shah: 22386
+    # temp_var = message.get('stream_id')
+    # stream_policy = model.stream_dict[temp_var].get('stream_post_policy')
+    # user_role = model.get_user_info(model.user_id).get('role')
+    # print("User role: ", user_role)
+    # print("stream_post_policy: ", stream_policy)
+
+    if(int(stream_policy) == 2):
+        print("---------- Admins only ----------")
+        if(user_role <= 200):
+            # model.controller.view.write_box.stream_box_view(
+            #     caption=message['display_recipient'],
+            #     title=message['subject'],
+            #     stream_id=stream_id,
+            # )
+            return False
+        else:
+            print("Admins only")
+            model.controller.report_warning(
+                "Only Admins and owners can type"
+            )
+            return True
+
+    elif(int(stream_policy) == 4):
+        print("---------- Moderators only ----------")
+        if(user_role <= 200):
+            # model.controller.view.write_box.stream_box_view(
+            #     caption=message['display_recipient'],
+            #     title=message['subject'],
+            #     stream_id=stream_id,
+            # )
+            return False
+        else:
+            print("Admins, moderators can type only")
+            model.controller.report_warning(
+                "Only Admins, moderators and owners can type"
+            )
+            return True
+
+    elif(int(stream_policy) == 3):
+        print("---------- Full members only ----------")
+        if(user_role <= 400):
+            # model.controller.view.write_box.stream_box_view(
+            #     caption=message['display_recipient'],
+            #     title=message['subject'],
+            #     stream_id=stream_id,
+            # )
+            return False
+        else:
+            print("Full members only")
+            model.controller.report_warning(
+                "Only Admins, moderators, owners and full owners can type"
+            )
+            return True
+
+    else:
+        print("---------- Guests also ----------")
+        # model.controller.view.write_box.stream_box_view(
+        #     caption=message['display_recipient'],
+        #     title=message['subject'],
+        #     stream_id=stream_id,
+        # )
+        return False
+
+
+    # if(user_role < 300):
+    #     return False
+    # else:
+    #     return True
+    # stream_id = None
+    # if isinstance(stream_identifier, int):
+    #     stream_id = stream_identifier
+    # elif isinstance(stream_identifier, str):
+    #     for s_id, stream in model.stream_dict.items():
+    #         if stream['name'] == stream_identifier:
+    #             stream_id = s_id
+    #             break
+
+    # if not stream_id:
+    #     msg_footer = (
+    #         model.controller.view.set_footer_text(
+    #             "Specified stream does not exist.",
+    #             5))
+    #     return True
+    # else:
+    #     if (model.stream_dict[stream_id].
+    #             get('is_announcement_only', None) == 1
+    #             or (model.initial_data.get('is_admin', None)
+    #                 or model.initial_data.get('is_owner', None)
+    #                 and model.stream_dict[stream_id].
+    #                 get('stream_post_policy', None) == 2)):
+    #         msg_footer = (
+    #             model.controller.view.set_footer_text(
+    #                 "You are not authorised to send messages "
+    #                 "to this stream.",
+    #                 5))
+    #         return True
+    #     else:
+    #         return False
+
 def match_stream(
     data: List[Tuple[DataT, str]], search_text: str, pinned_streams: List[StreamData]
 ) -> Tuple[List[DataT], List[str]]:

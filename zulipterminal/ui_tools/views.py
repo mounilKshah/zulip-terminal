@@ -1197,6 +1197,22 @@ class UserInfoView(PopUpView):
                 display_data["Owner"] = data["bot_owner_name"]
         else:
             display_data["Role"] = ROLE_BY_ID[data["role"]]["name"]
+            print("================ ROLE_BY_ID ================")
+            print("Print role of user in the stream: ", data["role"])
+            # data:
+            # {
+            #     'full_name': 'Neil Pilgrim (neiljp)', 
+            #     'email': 'user2406@chat.zulip.org', 
+            #     'date_joined': '2017-05-22T17:21:00.711831+00:00', 
+            #     'timezone': 'America/Los_Angeles', 
+            #     'is_bot': False, 
+            #     'role': 300, 
+            #     'bot_type': None, 
+            #     'bot_owner_name': '', 
+            #     'last_active': ''
+            #     }
+
+            # print(ROLE_BY_ID)
 
             if data["last_active"]:
                 display_data["Last active"] = data["last_active"]

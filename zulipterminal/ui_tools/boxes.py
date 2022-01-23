@@ -14,6 +14,8 @@ from bs4.element import NavigableString, Tag
 from typing_extensions import Literal
 from tzlocal import get_localzone
 from urwid_readline import ReadlineEdit
+# from tests.conftest import stream_dict
+import pprint
 
 from zulipterminal.api_types import Composition, PrivateComposition, StreamComposition
 from zulipterminal.config.keys import (
@@ -50,6 +52,7 @@ from zulipterminal.helper import (
     match_topics,
     match_user,
     match_user_name_and_email,
+    unauthorised_warning,
 )
 from zulipterminal.server_url import near_message_url
 from zulipterminal.ui_tools.buttons import EditModeButton
@@ -837,6 +840,8 @@ class WriteBox(urwid.Pile):
                             )
                             self.view.controller.report_error(invalid_stream_error)
                             return key
+                        # elif unauthorised_warning(self.model, stream_name):
+                        #     return key
                         user_ids = self.model.get_other_subscribers_in_stream(
                             stream_name=stream_name
                         )
@@ -1728,18 +1733,159 @@ class MessageBox(urwid.Pile):
         return super().mouse_event(size, event, button, col, row, focus)
 
     def keypress(self, size: urwid_Size, key: str) -> Optional[str]:
+        # truth_value = unauthorised_warning(self.model, self.message.get('stream_id'))
+        # print("-----------------Printing truth value -----------------")
+        # print(truth_value)
         if is_command_key("REPLY_MESSAGE", key):
             if self.message["type"] == "private":
                 self.model.controller.view.write_box.private_box_view(
                     recipient_user_ids=self.recipient_ids,
                 )
             elif self.message["type"] == "stream":
-                self.model.controller.view.write_box.stream_box_view(
-                    caption=self.message["display_recipient"],
-                    title=self.message["subject"],
-                    stream_id=self.stream_id,
-                )
+                print("__________________ self.message[type] is stream ________________")
+                # NOTE: User_id of mounil shah: 22386
+                temp_var = self.message.get('stream_id')
+                stream_policy = self.model.stream_dict[temp_var].get('stream_post_policy')
+                user_role = self.model.get_user_info(self.model.user_id).get('role')
+                print("User role: ", user_role)
+                print("stream_post_policy: ", stream_policy)
+
+                if unauthorised_warning(self.model, self.message.get('stream_id')):
+                    return key
+                else:
+                    self.model.controller.view.write_box.stream_box_view(
+                        caption=self.message['display_recipient'],
+                        title=self.message['subject'],
+                        stream_id=self.stream_id,
+                    )
+
+                # stream_id = self.message.get('stream_id')
+                # post_policy = self.model.stream_dict[stream_id]
+                # pprint.pprint(post_policy)
+                # print(post_policy)
+                # id_of_user = self.user_id
+                # user_data_id = self.model._fetch_user_data()
+                # controller_set = self.model.controller
+                # print("Printing controller: \n", controller_set)
+                # print("User role: ", self.model.user_id)
+
+                # if(int(stream_policy) == 2):
+                #     print("---------- Admins only ----------")
+                #     if(user_role <= 200):
+                #         self.model.controller.view.write_box.stream_box_view(
+                #             caption=self.message['display_recipient'],
+                #             title=self.message['subject'],
+                #             stream_id=self.stream_id,
+                #         )
+                #     else:
+                #         print("Admins only")
+                #         self.model.controller.report_warning(
+                #             "Only Admins and owners can type"
+                #         )
+                #         return key
+
+                # elif(int(stream_policy) == 4):
+                #     print("---------- Moderators only ----------")
+                #     if(user_role <= 200):
+                #         self.model.controller.view.write_box.stream_box_view(
+                #             caption=self.message['display_recipient'],
+                #             title=self.message['subject'],
+                #             stream_id=self.stream_id,
+                #         )
+                #     else:
+                #         print("Admins, moderators can type only")
+                #         self.model.controller.report_warning(
+                #             "Only Admins, moderators and owners can type"
+                #         )
+                #         return key
+
+                # elif(int(stream_policy) == 3):
+                #     print("---------- Full members only ----------")
+                #     if(user_role <= 400):
+                #         self.model.controller.view.write_box.stream_box_view(
+                #             caption=self.message['display_recipient'],
+                #             title=self.message['subject'],
+                #             stream_id=self.stream_id,
+                #         )
+                #     else:
+                #         print("Full members only")
+                #         self.model.controller.report_warning(
+                #             "Only Admins, moderators, owners and full owners can type"
+                #         )
+                #         return key
+
+                # else:
+                #     print("---------- Guests also ----------")
+                #     self.model.controller.view.write_box.stream_box_view(
+                #         caption=self.message['display_recipient'],
+                #         title=self.message['subject'],
+                #         stream_id=self.stream_id,
+                #     )
+
+                    # self.model.controller.view.write_box.stream_box_view(
+                    #     caption=self.message['display_recipient'],
+                    #     title=self.message['subject'],
+                    #     stream_id=self.stream_id,
+                    # )
+
+                # else:
+                #     # if(post_policy == 2 and user_role > 300):
+                #     print("We don't do that here")
+                    
+                    
+                # print(userid)
+                
+                # if(post_policy == 1):
+                # self.model.controller.view.write_box.stream_box_view(
+                #     caption=self.message['display_recipient'],
+                #     title=self.message['subject'],
+                #     stream_id=self.stream_id,
+                # )
+                # else:
+                #     print("Admins only")
+
+
+
+                # print("Print self-model ", self.model)
+                # Write Python3 code here
+
+
+                # print("Boxes.py model.stream_dict ")
+                # print("stream_post_policy: ", end='')
+                # pprint.pprint(json_data)
+
+                
+                # print("Print self-model-controller ", self.model.controller)
+                # print("Printing self-message-stream_id ", temp_var)
+                # print(self.model.stream_dict[stream_dict].get('stream_post_policy'))
+                # print(self.model.controller.is_in_editor_mode(self))
+                # print(self)
+
+                # self.model.controller.view.write_box.stream_box_view(
+                #     caption=self.message["display_recipient"],
+                #     title=self.message["subject"],
+                #     stream_id=self.stream_id,
+                # )
+    #  def keypress(self, size: urwid_Size, key: str) -> Optional[str]:
+    #     if is_command_key('ENTER', key):
+    #         if self.message['type'] == 'private':
+    #             self.model.controller.view.write_box.private_box_view(
+    #                 email=self.recipients_emails,
+    #                 recipient_user_ids=self.recipient_ids,
+    #             )
+            # elif self.message['type'] == 'stream':
+            #     if not unauthorised_warning(self.model,
+            #                                 self.message.get('stream_id')):
+            #         self.model.controller.view.write_box.stream_box_view(
+            #             caption=self.message['display_recipient'],
+            #             title=self.message['subject'],
+            #             stream_id=self.stream_id,
+            #         )
+
         elif is_command_key("STREAM_MESSAGE", key):
+            # if unauthorised_warning(self.model, self.message.get('stream_id')):
+            #     return key
+            # else:
             if len(self.model.narrow) != 0 and self.model.narrow[0][0] == "stream":
                 self.model.controller.view.write_box.stream_box_view(
                     caption=self.message["display_recipient"],
@@ -1804,41 +1950,47 @@ class MessageBox(urwid.Pile):
                 recipient_user_ids=[self.message["sender_id"]],
             )
         elif is_command_key("MENTION_REPLY", key):
-            self.keypress(size, primary_key_for_command("REPLY_MESSAGE"))
-            mention = f"@**{self.message['sender_full_name']}** "
-            self.model.controller.view.write_box.msg_write_box.set_edit_text(mention)
-            self.model.controller.view.write_box.msg_write_box.set_edit_pos(
-                len(mention)
-            )
+            if unauthorised_warning(self.model, self.message.get('stream_id')):
+                return key
+            else:
+                self.keypress(size, primary_key_for_command("REPLY_MESSAGE"))
+                mention = f"@**{self.message['sender_full_name']}** "
+                self.model.controller.view.write_box.msg_write_box.set_edit_text(mention)
+                self.model.controller.view.write_box.msg_write_box.set_edit_pos(
+                    len(mention)
+                )
             self.model.controller.view.middle_column.set_focus("footer")
         elif is_command_key("QUOTE_REPLY", key):
-            self.keypress(size, primary_key_for_command("REPLY_MESSAGE"))
+            if unauthorised_warning(self.model, self.message.get('stream_id')):
+                return key
+            else:
+                self.keypress(size, primary_key_for_command("REPLY_MESSAGE"))
 
-            # To correctly quote a message that contains quote/code-blocks,
-            # we need to fence quoted message containing ``` with ````,
-            # ```` with ````` and so on.
-            response = self.model.fetch_raw_message_content(self.message["id"])
-            message_raw_content = response if response is not None else ""
-            fence = get_unused_fence(message_raw_content)
+                # To correctly quote a message that contains quote/code-blocks,
+                # we need to fence quoted message containing ``` with ````,
+                # ```` with ````` and so on.
+                response = self.model.fetch_raw_message_content(self.message["id"])
+                message_raw_content = response if response is not None else ""
+                fence = get_unused_fence(message_raw_content)
 
-            absolute_url = near_message_url(self.model.server_url[:-1], self.message)
+                absolute_url = near_message_url(self.model.server_url[:-1], self.message)
 
-            # Compose box should look something like this:
-            #   @_**Zeeshan|514** [said](link to message):
-            #   ```quote
-            #   message_content
-            #   ```
-            quote = "@_**{0}|{1}** [said]({2}):\n{3}quote\n{4}\n{3}\n".format(
-                self.message["sender_full_name"],
-                self.message["sender_id"],
-                absolute_url,
-                fence,
-                message_raw_content,
-            )
+                # Compose box should look something like this:
+                #   @_**Zeeshan|514** [said](link to message):
+                #   ```quote
+                #   message_content
+                #   ```
+                quote = "@_**{0}|{1}** [said]({2}):\n{3}quote\n{4}\n{3}\n".format(
+                    self.message["sender_full_name"],
+                    self.message["sender_id"],
+                    absolute_url,
+                    fence,
+                    message_raw_content,
+                )
 
-            self.model.controller.view.write_box.msg_write_box.set_edit_text(quote)
-            self.model.controller.view.write_box.msg_write_box.set_edit_pos(len(quote))
-            self.model.controller.view.middle_column.set_focus("footer")
+                self.model.controller.view.write_box.msg_write_box.set_edit_text(quote)
+                self.model.controller.view.write_box.msg_write_box.set_edit_pos(len(quote))
+                self.model.controller.view.middle_column.set_focus("footer")
         elif is_command_key("EDIT_MESSAGE", key):
             # User can't edit messages of others that already have a subject
             # For private messages, subject = "" (empty string)
