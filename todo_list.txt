@@ -19,3 +19,4 @@ Selecting the text to edit it
 Reaching end of messages
 Highlight the words searched in the search results
 Autocomplete text while typing, just like gmail
+Zulint for linting the code written
