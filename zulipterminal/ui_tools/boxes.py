@@ -1729,6 +1729,13 @@ class MessageBox(urwid.Pile):
                     recipient_user_ids=self.recipient_ids,
                 )
             elif self.message["type"] == "stream":
+                is_unauthorised_warning = self.model.is_unauthorised_to_post_in_stream(
+                    self.message["stream_id"]
+                )
+                if is_unauthorised_warning is not None:
+                    self.model.controller.report_warning(is_unauthorised_warning)
+                    return key
+
                 self.model.controller.view.write_box.stream_box_view(
                     caption=self.message["display_recipient"],
                     title=self.message["subject"],
@@ -1799,6 +1806,13 @@ class MessageBox(urwid.Pile):
                 recipient_user_ids=[self.message["sender_id"]],
             )
         elif is_command_key("MENTION_REPLY", key):
+            is_unauthorised_warning = self.model.is_unauthorised_to_post_in_stream(
+                self.message["stream_id"]
+            )
+            if is_unauthorised_warning is not None:
+                self.model.controller.report_warning(is_unauthorised_warning)
+                return key
+
             self.keypress(size, primary_key_for_command("REPLY_MESSAGE"))
             mention = f"@**{self.message['sender_full_name']}** "
             self.model.controller.view.write_box.msg_write_box.set_edit_text(mention)
@@ -1807,6 +1821,13 @@ class MessageBox(urwid.Pile):
             )
             self.model.controller.view.middle_column.set_focus("footer")
         elif is_command_key("QUOTE_REPLY", key):
+            is_unauthorised_warning = self.model.is_unauthorised_to_post_in_stream(
+                self.message["stream_id"]
+            )
+            if is_unauthorised_warning is not None:
+                self.model.controller.report_warning(is_unauthorised_warning)
+                return key
+
             self.keypress(size, primary_key_for_command("REPLY_MESSAGE"))
 
             # To correctly quote a message that contains quote/code-blocks,
