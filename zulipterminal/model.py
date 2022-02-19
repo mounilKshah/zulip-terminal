@@ -549,6 +549,165 @@ class Model:
             notify_if_message_sent_outside_narrow(composition, self.controller)
         return message_was_sent
 
+    def prevent_compose_box_in_stream(self, stream_identifier: int) -> Optional[str]:
+        """
+        Identify whether a user is authorised to send message to the given
+        stream or not using stream_post_policy and/or is_announcement_policy
+        and allow/restrict the compose box from opening and accordingly
+        update the footer
+        """
+
+        def is_provisional_member(self) -> bool:
+            if self.is_moderator:
+                return False
+            diff = (timezone_now() - self.date_joined).days
+            if diff < self.realm.waiting_period_threshold:
+                return True
+            return False
+
+        fetch_types = self.initial_data_to_fetch
+        event_types = list(self.event_actions)
+
+        try:
+            response = self.client.register(
+                # event_types=event_types,
+                fetch_event_types=fetch_types
+            )
+        except zulip.ZulipError as e:
+            return str(e)
+
+        print("event_action: ")
+        # print("User id: ", self.user_id)
+        pprint.pprint(response)
+        # print(fetch_types)
+
+        # zulip_version = self.initial_data["zulip_version"]
+        # feature_level = self.initial_data.get("zulip_feature_level")
+        # first check whether the given user id is valid or not
+        user_data_from_api = self._all_users_by_id.get(self.user_id, None)
+        # stream_policy = self.stream_dict[stream_identifier].get("stream_post_policy")
+        dictionary_stream = self.stream_dict[stream_identifier]
+        if not user_data_from_api:
+            return "User does not exist"
+
+        # print("BEFORE: user role type: ", type(user_info.get("role")))
+
+        # if user_info.get("role") == None:
+        # # if user_info.get("role") is None or type(user_info.get("role")) is NoneType:
+        #     # Default role is member
+        #     user_info["role"] = 400
+
+        # print("AFTER: user role type: ", type(user_info["role"]))
+
+        # print("zulip version: ", zulip_version)
+        # print("ZFL version: ", feature_level)
+
+        if dictionary_stream["is_announcement_only"] or dictionary_stream["stream_post_policy"] == 2:
+            if user_data_from_api["is_admin"] or user_data_from_api["is_owner"]:
+                return None
+            else:
+                return "Only Admins and owners can type"
+        elif user_data_from_api["role"] is not None:
+            # user_role = user_data_from_api.get("role")
+            if dictionary_stream["stream_post_policy"] is not None:
+                # check for moderators only stream
+                if dictionary_stream["stream_post_policy"] == 4:
+                    # moderators only
+                    if (
+                        user_data_from_api["role"] <= 300
+                        or user_data_from_api["is_admin"]
+                        or user_data_from_api["is_owner"]
+                    ):
+                        return None
+                    else:
+                        return "Only Admins, moderators and owners are allowd to type"
+                    
+                elif dictionary_stream["stream_post_policy"] == 3:
+                    # Full members only
+                    if(
+                        user_data_from_api["role"] <= 400
+                        or user_data_from_api["is_admin"]
+                        or user_data_from_api["is_owner"]
+                    ):
+                        return None
+                    else:
+                        return "Only Admins, moderators, owners and full owners are allowed to type"
+                else:
+                    return None
+        else:
+            return None
+            
+        return None
+
+                    # if user_data_from_api.get("role") is not None:
+
+        # if self.stream_dict[stream_identifier].get(
+        #     "stream_post_policy"
+        # ) == 2 or self.stream_dict[stream_identifier].get("is_announcement_only"):
+        #     # checks whether the user is an admin/owner
+        #     if (
+        #         # user_data_from_api.get("role") <= 200
+        #         self.initial_data.get("is_admin", True)
+        #         or self.initial_data.get("is_owner", True)
+        #     ):
+        #         return None
+        #     else:
+        #         return "Only Admins and owners can type"
+        # elif self.stream_dict[stream_identifier].get("stream_post_policy") == 4:
+        #     # checks whether the user is an admin/owner/moderator
+        #     if (
+        #         user_data_from_api.get("role") <= 300
+        #         or self.initial_data.get("is_admin", True)
+        #         or self.initial_data.get("is_owner", True)
+        #     ):
+        #         return None
+        #     else:
+        #         return "Only Admins, moderators and owners are allowd to type"
+        # elif self.stream_dict[stream_identifier].get("stream_post_policy") == 3:
+        #     # checks whether the user is an admin/owner/moderator/full member
+        #     if user_data_from_api.get("role") <= 400:
+        #         return None
+        #     else:
+        #         return "Only Admins, moderators, owners and full owners are allowed to type"
+        # else:
+        #     # guests are also allowed to post messages on the stream
+        #     return None
+
+
+        # print("------------------------------------------------------")
+
+        # stream_id = None
+        # if isinstance(stream_identifier, int):
+        #     stream_id = stream_identifier
+        # elif isinstance(stream_identifier, str):
+        #     for s_id, stream in self.stream_dict.items():
+        #         if stream['name'] == stream_identifier:
+        #             stream_id = s_id
+        #             break
+
+        # if not stream_id:
+        #     msg_footer = (
+        #         self.controller.view.set_footer_text(
+        #             "Specified stream does not exist.",
+        #             5))
+        #     return True
+        # else:
+            # if (self.stream_dict[stream_id].
+            #         get('is_announcement_only', None) == 1
+            #         or (self.initial_data.get('is_admin', None)
+            #             or self.initial_data.get('is_owner', None)
+            #             and model.stream_dict[stream_id].
+            #             get('stream_post_policy', None) == 2)):
+            #     msg_footer = (
+            #         self.controller.view.set_footer_text(
+            #             "You are not authorised to send messages "
+            #             "to this stream.",
+            #             5))
+            #     return True
+            # else:
+            #     return False
+
+# add unauthorised_warning
     def update_private_message(self, msg_id: int, content: str) -> bool:
         request = {
             "message_id": msg_id,
