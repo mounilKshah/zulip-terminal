@@ -116,7 +116,7 @@ class MessageView(urwid.ListBox):
         focus_msg = self.model.get_focus_in_current_narrow()
         if focus_msg == set():
             focus_msg = len(msg_btn_list) - 1
-        self.focus_msg = focus_msg
+        # self.focus_msg = focus_msg
         return msg_btn_list
 
     @asynch
@@ -1323,6 +1323,41 @@ class StreamInfoView(PopUpView):
         self.controller = controller
         stream = controller.model.stream_dict[stream_id]
 
+        # stream_post_policy = stream.get("stream_post_policy")
+
+        # if stream_post_policy is None:
+        #     stream_post_policy = stream.get("is_announcement_only")
+
+        # print("Stream anP: ", stream_post_policy)
+
+        stream_posting_policy = {
+            1: "Any user can post",
+            2: "Only owners and admins can post",
+            3: "Only members can post",
+            4: "Only owners, admins and moderators can post",
+        }
+        # posting_policy = stream_posting_policy[stream["stream_post_policy"]]
+
+
+        if stream.get("stream_post_policy") is None:
+            if stream.get("is_announcement_only"):
+                stream_policy = "Only admins can post"
+            else:
+                stream_policy = "Any user can post"
+        else:
+            stream_policy = stream_posting_policy[stream["stream_post_policy"]]
+
+
+            # if stream.get("stream_post_policy") == 2:
+            #     stream_policy = "Only owners and admins can post"
+            # elif stream.get("stream_post_policy") == 4:
+            #     stream_policy = "Only owners, admins & moderators can post"
+            # elif stream.get("stream_post_policy") == 3:
+            #     stream_policy = "Guests cannot post"
+            # else:
+            #     stream_policy = "Anyone can post"
+                
+
         # New in feature level 30, server version 4.0
         stream_creation_date = stream["date_created"]
         date_created = (
@@ -1360,6 +1395,11 @@ class StreamInfoView(PopUpView):
         weekly_msg_count = (
             "Stream created recently" if weekly_traffic is None else str(weekly_traffic)
         )
+        # posting_stream = [
+        #     (
+        #         "Stream Post Policy", f"{stream_post_policy}"
+        #     )
+        # ]
 
         stream_marker = (
             STREAM_MARKER_PRIVATE if stream["invite_only"] else STREAM_MARKER_PUBLIC
@@ -1381,6 +1421,7 @@ class StreamInfoView(PopUpView):
                 ]
                 + date_created
                 + message_retention_days
+                # + posting_stream
                 + [
                     ("Weekly Message Count", str(weekly_msg_count)),
                     (
@@ -1392,6 +1433,7 @@ class StreamInfoView(PopUpView):
                         f"Press {email_keys} to copy Stream email address",
                     ),
                     ("History of Stream", f"{availability_of_history}"),
+                    ("Stream post policy", f"{stream_policy}"),
                 ],
             ),
             ("Stream settings", []),
