@@ -806,236 +806,180 @@ class TestModel:
                 req, self.controller
             )
 
-    # @pytest.mark.parametrize(
-    #     "announcement_policy",
-    #     [
-    #         ({"is_announcement_only": True}),
-    #         ({"is_announcement_only": False}),
-    #         ({"is_announcement_only": False, "stream_post_policy": 1}),
-    #         ({"is_announcement_only": True, "stream_post_policy": 2}),
-    #         ({"is_announcement_only": False, "stream_post_policy": 3}),
-    #         ({"is_announcement_only": False, "stream_post_policy": 4}),
-    #     ],
-    #     ids=[
-    #         "stream_is_admin_only:Zulip2.1",
-    #         "stream_is_not_admin_only:Zulip2.1",
-    #         "stream_is_guest:Zulip3.0+_ZFL1",
-    #         "stream_is_admin_only:Zulip3.0+_ZFL1",
-    #         "stream_is_member_only:Zulip3.0+_ZFL1",
-    #         "stream_is_moderator_only:Zulip3.0+_ZFL1",
-    #     ],
-    # )
-    # @pytest.mark.parametrize(
-    #     "user_role", "expected_results",
-    #     [
-    #         ({"is_admin": True}),
-    #         ({"is_admin": False}),
-    #         ({"is_owner": True, "is_admin": True, "is_guest": False}),
-    #         ({"is_owner": False, "is_admin": True, "is_guest": False}),
-    #         ({"is_owner": False, "is_admin": False, "is_guest": True}),
-    #         # ({"is_admin": True, "is_owner": True, "is_guest": False, "role": 100}),
-    #         ({"is_admin": True, "is_owner": False, "is_guest": False, "role": 200}),
-    #         ({"is_admin": False, "is_owner": False, "is_guest": False, "role": 300}),
-    #         ({"is_admin": False, "is_owner": False, "is_guest": False, "role": 400}),
-    #         ({"is_admin": False, "is_owner": False, "is_guest": True, "role": 600}),
-    #     ],
-    #     ids=[
-    #         "user_is_admin:Zulip2.1",
-    #         "user_is_not_admin:Zulip2.1",
-    #         "user_is_owner:Zulip3.0+_ZFL8",
-    #         "user_is_admin:Zulip3.0+_ZFL8",
-    #         "user_is_guest:Zulip3.0+_ZFL10",
-    #         "user_is_owner:Zulip4.0+_ZFL59",
-    #         "user_is_admin:Zulip4.0+_ZFL59",
-    #         "user_is_moderator:Zulip4.0+_ZFL59",
-    #         "user_is_member:Zulip4.0+_ZFL59",
-    #         "user_is_guest:Zulip4.0+_ZFL59",
-    #     ],
-    # )
-    # def test_is_unauthorised_to_post_in_stream(
-    #     self,
-    #     model,
-    #     user_dict,
-    #     stream_dict,
-    #     _all_users_by_id,
-    #     announcement_policy,
-    #     user_role,
-    # ):
-        # _all_users_by_id[11].update(user_role)
-        # model._all_users_by_id = _all_users_by_id
-        # model.user_dict = user_dict
-        # model.user_id = 11
-        # stream_dict[99].update(announcement_policy)
-        # if (
-        #     announcement_policy.get("is_announcement_only")
-        #     or announcement_policy.get("stream_post_policy") == 2
-        # ):
-        #     if user_role.get("is_admin") or user_role.get("is_owner"):
-        #         assert model.is_unauthorised_to_post_in_stream(stream_id=99) is None
-        #     else:
-        #         assert (
-        #             model.is_unauthorised_to_post_in_stream(stream_id=99)
-        #             == "Only Admins and owners can type"
-        #         )
-        # # is_announcement_only is deprecated in Zulip 3.0+ -> stream_post_policy (ZFL 1)
-        # elif announcement_policy.get("stream_post_policy") is not None:
-        #     # check for moderators only stream
-        #     if announcement_policy.get("stream_post_policy") == 4:
-        #         # moderators only
-        #         if (
-        #             user_role.get("role", 400) <= 300
-        #             or user_role.get("is_admin") is True
-        #             or user_role.get("is_owner") is True
-        #             and user_role.get("is_guest") is False
-        #         ):
-        #             assert model.is_unauthorised_to_post_in_stream(stream_id=99) is None
-        #         else:
-        #             assert (
-        #                 model.is_unauthorised_to_post_in_stream(stream_id=99)
-        #                 == "Only Admins, moderators and owners are allowed to type"
-        #             )
-        #     # check for 'full members' in the stream
-        #     elif announcement_policy.get("stream_post_policy") == 3:
-        #         # Full members only
-        #         if (
-        #             user_role.get("role", 400) <= 400
-        #             or user_role.get("is_admin") is True
-        #             or user_role.get("is_owner") is True
-        #             or user_role.get("is_guest") is False
-        #         ):
-        #             assert model.is_unauthorised_to_post_in_stream(stream_id=99) is None
-        #         else:
-        #             assert (
-        #                 model.is_unauthorised_to_post_in_stream(stream_id=99)
-        #                 == "Only Admins, moderators, owners and owners are allowed to type"
-        #             )
-        #     else:
-        #         assert model.is_unauthorised_to_post_in_stream(stream_id=99) is None
-        # else:
-        #     assert model.is_unauthorised_to_post_in_stream(stream_id=99) is None
-
-# new function for test
-# can-post on the stream
-    @pytest.mark.one
     @pytest.mark.parametrize(
         "user_role, stream_properties",
         [
-            # is admin of the stream 2.1
+            # is admin :: announcement_only :: 2.1
             (
                 {"is_admin": True},
                 {"is_announcement_only": True},
             ),
-            # is admin of the stream 2.1
+            # is admin :: not_announcement_only :: 2.1
             (
                 {"is_admin": True},
                 {"is_announcement_only": False},
             ),
-            # is not admin of the stream 2.1
+            # is not admin :: not_announcement_only :: 2.1
             (
                 {"is_admin": False},
                 {"is_announcement_only": False},
             ),
-            # is owner of the stream ZFL 8
+            # is owner :: anyone_can_post :: ZFL 8
             (
                 {"is_owner": True, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 1},
             ),
+            # is owner :: only_admins_can_post :: ZFL 8
             (
                 {"is_owner": True, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": True, "stream_post_policy": 2},
             ),
+            # is owner :: only_members_can_post :: ZFL 8
             (
                 {"is_owner": True, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 3},
             ),
+            # is owner :: only_moderators_can_post :: ZFL 8
             (
                 {"is_owner": True, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 4},
             ),
-            # is admin of the stream ZFL 8
+            # is admin :: anyone_can_post :: ZFL 8
             (
                 {"is_owner": False, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 1},
             ),
+            # is admin :: only_admins_can_post :: ZFL 8
             (
                 {"is_owner": False, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": True, "stream_post_policy": 2},
             ),
+            # is admin :: only_members_can_post :: ZFL 8
             (
                 {"is_owner": False, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 3},
             ),
+            # is admin :: only_members_can_post :: ZFL 8
             (
                 {"is_owner": False, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 4},
             ),
-            # is guest ZFL 8
+            # is member :: anyone_can_post :: ZFL 8
+            (
+                {"is_owner": False, "is_admin": False, "is_guest": False},
+                {"is_announcement_only": False, "stream_post_policy": 1},
+            ),
+            # is member :: only_members_can_post :: ZFL 8
+            (
+                {"is_owner": False, "is_admin": False, "is_guest": False},
+                {"is_announcement_only": False, "stream_post_policy": 3},
+            ),
+            # is guest :: anyone_can_post :: ZFL 59
             (
                 {"is_owner": False, "is_admin": False, "is_guest": True},
                 {"is_announcement_only": False, "stream_post_policy": 1},
             ),
-            # is_owner ZFL 59
+            # is_owner :: anyone_can_post :: ZFL 59
             (
                 {"is_admin": True, "is_owner": True, "is_guest": False, "role": 100},
                 {"is_announcement_only": False, "stream_post_policy": 1},
             ),
+            # is owner :: only_admins_can_post :: ZFL 59
             (
                 {"is_admin": True, "is_owner": True, "is_guest": False, "role": 100},
                 {"is_announcement_only": True, "stream_post_policy": 2},
             ),
+            # is owner :: only_members_can_post :: ZFL 59
             (
                 {"is_admin": True, "is_owner": True, "is_guest": False, "role": 100},
                 {"is_announcement_only": False, "stream_post_policy": 3},
             ),
+            # is owner :: only_moderators_can_post :: ZFL 59
             (
                 {"is_admin": True, "is_owner": True, "is_guest": False, "role": 100},
                 {"is_announcement_only": False, "stream_post_policy": 4},
             ),
-            # is_admin ZFL 59
+            # is admin :: anyone_can_post :: ZFL 59
             (
                 {"is_admin": True, "is_owner": False, "is_guest": False, "role": 200},
                 {"is_announcement_only": False, "stream_post_policy": 1},
             ),
+            # is admin :: only_admins_can_post :: ZFL 59
             (
                 {"is_admin": True, "is_owner": False, "is_guest": False, "role": 200},
                 {"is_announcement_only": True, "stream_post_policy": 2},
             ),
+            # is admin :: only_members_can_post :: ZFL 59
             (
                 {"is_admin": True, "is_owner": False, "is_guest": False, "role": 200},
                 {"is_announcement_only": False, "stream_post_policy": 3},
             ),
+            # is admin :: only_members_can_post :: ZFL 59
             (
                 {"is_admin": True, "is_owner": False, "is_guest": False, "role": 200},
                 {"is_announcement_only": False, "stream_post_policy": 4},
             ),
-            # is_moderator ZFL 59
+            # is_moderator :: anyone_can_post :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 300},
                 {"is_announcement_only": False, "stream_post_policy": 1},
             ),
+            # is_moderator :: only_members_can_post :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 300},
                 {"is_announcement_only": False, "stream_post_policy": 3},
             ),
+            # is_moderator :: only_moderators_can_post :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 300},
                 {"is_announcement_only": False, "stream_post_policy": 4},
             ),
-            # is_member ZFL 59
+            # is_member :: anyone_can_post :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 400},
                 {"is_announcement_only": False, "stream_post_policy": 1},
             ),
+            # is_member :: only_members_can_post :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 400},
                 {"is_announcement_only": False, "stream_post_policy": 3},
             ),
-            # is_guest ZFL 59
+            # is_guest :: anyone_can_post :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": True, "role": 600},
                 {"is_announcement_only": False, "stream_post_policy": 1},
             ),
-        ]
+        ],
+        ids=[
+            "is_admin:announcement_only:Zulip2.1",
+            "is_admin:not_announcement_only:Zulip2.1",
+            "is_not_admin:not_announcement_only:Zulip2.1",
+            "is_owner:anyone_can_post:Zulip3.0+:ZFL8",
+            "is_owner:admins_only:Zulip3.0+:ZFL8",
+            "is_owner:members_only:Zulip3.0+:ZFL8",
+            "is_owner:moderators_only:Zulip3.0+:ZFL8",
+            "is_admin:anyone_can_post:Zulip3.0+:ZFL8",
+            "is_admin:admins_only:Zulip3.0+:ZFL8",
+            "is_admin:members_only:Zulip3.0+:ZFL8",
+            "is_admin:moderators_only:Zulip3.0+:ZFL8",
+            "is_member:anyone_can_post:Zulip3.0+:ZFL8",
+            "is_member:members_only:Zulip3.0+:ZFL8",
+            "is_guest:anyone_can_post:Zulip3.0+:ZFL8",
+            "is_owner:anyone_can_post:Zulip4.0+:ZFL59",
+            "is_owner:admins_only:Zulip4.0+:ZFL59",
+            "is_owner:members_only:Zulip4.0+:ZFL59",
+            "is_owner:moderators_only:Zulip4.0+:ZFL59",
+            "is_admin:anyone_can_post:Zulip4.0+:ZFL59",
+            "is_admin:admins_only:Zulip4.0+:ZFL59",
+            "is_admin:members_only:Zulip4.0+:ZFL59",
+            "is_admin:moderators_only:Zulip4.0+:ZFL59",
+            "is_moderator:anyone_can_post:Zulip4.0+:ZFL59",
+            "is_moderator:admins_only:Zulip4.0+:ZFL59",
+            "is_moderator:moderators_only:Zulip4.0+:ZFL59",
+            "is_member:anyone_can_post:Zulip4.0+:ZFL59",
+            "is_member:members_only:Zulip4.0+:ZFL59",
+            "is_guest:anyone_can_post:Zulip4.0+:ZFL59",
+        ],        
     )
     def test_is_unauthorised_to_post_in_stream_can_post(
         self,
@@ -1043,8 +987,8 @@ class TestModel:
         user_dict,
         stream_dict,
         _all_users_by_id,
-        user_role, 
-        stream_properties
+        user_role,
+        stream_properties,
     ):
         _all_users_by_id[11].update(user_role)
         model._all_users_by_id = _all_users_by_id
@@ -1053,7 +997,7 @@ class TestModel:
         model.user_id = 11
         assert model.is_unauthorised_to_post_in_stream(stream_id=99) is None
 
-    @pytest.mark.two
+    # @pytest.mark.two
     @pytest.mark.parametrize(
         "user_role, stream_properties, expected_response",
         [
@@ -1061,63 +1005,89 @@ class TestModel:
             (
                 {"is_admin": False},
                 {"is_announcement_only": True},
-                "Only Admins and owners can type"
+                "Only Admins and owners can type",
             ),
-            # is guest ZFL 8
+            # is_member :: admins_only :: ZFL 8
+            (
+                {"is_owner": False, "is_admin": False, "is_guest": False},
+                {"is_announcement_only": False, "stream_post_policy": 2},
+                "Only Admins and owners can type",
+            ),
+            # is member :: moderators_only :: ZFL 8
+            (
+                {"is_owner": False, "is_admin": False, "is_guest": False},
+                {"is_announcement_only": False, "stream_post_policy": 4},
+                "Only Admins, moderators and owners are allowed to type",
+            ),
+            # is guest :: admins_only :: ZFL 8
             (
                 {"is_owner": False, "is_admin": False, "is_guest": True},
                 {"is_announcement_only": False, "stream_post_policy": 2},
-                "Only Admins and owners can type"
+                "Only Admins and owners can type",
             ),
-            # is guest ZFL 8
+            # is guest :: members_only :: ZFL 8
             (
                 {"is_owner": False, "is_admin": False, "is_guest": True},
                 {"is_announcement_only": False, "stream_post_policy": 3},
-                "Only Admins, moderators, owners and members are allowed to type"
+                "Only Admins, moderators, owners and members are allowed to type",
             ),
-            # is guest ZFL 8
-            # (
-            #     {"is_owner": False, "is_admin": False, "is_guest": True},
-            #     {"is_announcement_only": False, "stream_post_policy": 4},
-            #     "Only Admins, moderators and owners are allowed to type"
-            # ),
-            # is_moderator ZFL 59
+            # is guest :: moderators_only :: ZFL 8
+            (
+                {"is_owner": False, "is_admin": False, "is_guest": True},
+                {"is_announcement_only": False, "stream_post_policy": 4},
+                "Only Admins, moderators and owners are allowed to type",
+            ),
+            # is_moderator :: admins_only :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 300},
                 {"is_announcement_only": False, "stream_post_policy": 2},
-                "Only Admins and owners can type"
+                "Only Admins and owners can type",
             ),
-            # is_member ZFL 59
-            # (
-            #     {"is_admin": False, "is_owner": False, "is_guest": False, "role": 400},
-            #     {"is_announcement_only": False, "stream_post_policy": 2},
-            #     "Only Admins and owners can type"
-            # ),
-            # is_member ZFL 59
+            # is_member :: admins_only :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 400},
-                {"is_announcement_only": False, "stream_post_policy": 3},
-                "Only Admins, moderators, owners and members are allowed to type"
+                {"is_announcement_only": False, "stream_post_policy": 2},
+                "Only Admins and owners can type",
             ),
-            # is_guest ZFL 59
+            # is_member :: moderators_only :: ZFL 59
+            (
+                {"is_admin": False, "is_owner": False, "is_guest": False, "role": 400},
+                {"is_announcement_only": False, "stream_post_policy": 4},
+                "Only Admins, moderators and owners are allowed to type",
+            ),
+            # is_guest :: admins_only :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": True, "role": 600},
                 {"is_announcement_only": False, "stream_post_policy": 2},
-                "Only Admins and owners can type"
+                "Only Admins and owners can type",
             ),
-            # is_guest ZFL 59
+            # is_guest :: members_only :: ZFL 59
             (
                 {"is_admin": False, "is_owner": False, "is_guest": True, "role": 600},
                 {"is_announcement_only": False, "stream_post_policy": 3},
-                "Only Admins, moderators, owners and members are allowed to type"
+                "Only Admins, moderators, owners and members are allowed to type",
             ),
-            # is_guest ZFL 59
-            # (
-            #     {"is_admin": False, "is_owner": False, "is_guest": True, "role": 600},
-            #     {"is_announcement_only": False, "stream_post_policy": 4},
-            #     "Only Admins, moderators, owners and members are allowed to type"
-            # ),
-        ]
+            # is_guest :: moderators_only :: ZFL 59
+            (
+                {"is_admin": False, "is_owner": False, "is_guest": True, "role": 600},
+                {"is_announcement_only": False, "stream_post_policy": 4},
+                "Only Admins, moderators and owners are allowed to type",
+            ),
+        ],
+        ids=[
+            "is_not_admin:announcement_only:Zulip2.1",
+            "is_member:admins_only:Zulip3.0+:ZFL8",
+            "is_member:moderators_only:Zulip3.0+:ZFL8",
+            "is_guest:admins_only:Zulip3.0+:ZFL8",
+            "is_guest:members_only:Zulip3.0+:ZFL8",
+            "is_guest:moderators_only:Zulip3.0+:ZFL8",
+            "is_moderator:admins_only:Zulip4.0+:ZFL59",
+            "is_member:admins_only:Zulip4.0+:ZFL59",
+            "is_member:moderators_only:Zulip4.0+:ZFL59",
+            "is_guest:admins_only:Zulip4.0+:ZFL59",
+            "is_guest:members_only:Zulip4.0+:ZFL59",
+            "is_guest:moderators_only:Zulip4.0+:ZFL59",
+        ],
     )
     def test_is_unauthorised_to_post_in_stream_cannot_post(
         self,
@@ -1125,24 +1095,18 @@ class TestModel:
         user_dict,
         stream_dict,
         _all_users_by_id,
-        user_role, 
+        user_role,
         stream_properties,
-        expected_response
+        expected_response,
     ):
         _all_users_by_id[11].update(user_role)
         model._all_users_by_id = _all_users_by_id
         model.user_dict = user_dict
         stream_dict[99].update(stream_properties)
         model.user_id = 11
-        print("user role: ", user_role, ", policy value: ", stream_properties.get("stream_post_policy"))
-        print(model.is_unauthorised_to_post_in_stream(stream_id=99))
-        # print("user role: ", stream_properties)
-        assert model.is_unauthorised_to_post_in_stream(stream_id=99) == expected_response
-
-        
-    
-
-
+        assert (
+            model.is_unauthorised_to_post_in_stream(stream_id=99) == expected_response
+        )
 
     @pytest.mark.parametrize(
         "response, return_value",
@@ -2488,6 +2452,7 @@ class TestModel:
     def reaction_event_index_factory(self):
         """
         Generate index for reaction tests based on minimal specification
+
         Input is a list of pairs, of a message-id and a list of reaction tuples
         NOTE: reactions as None indicate not indexed, [] indicates no reaction
         """
