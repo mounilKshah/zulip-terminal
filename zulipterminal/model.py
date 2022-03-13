@@ -566,9 +566,9 @@ class Model:
         ):
             # For admins and owners only (not using user role)
             if (
-                user_info.get("is_admin") is True
-                or user_info.get("is_owner") is True
-                # and user_info.get("is_guest") is False
+                user_info.get("is_admin")
+                or user_info.get("is_owner")
+                and user_info.get("is_guest") is False
             ):
                 return None
             else:
@@ -581,8 +581,7 @@ class Model:
                     user_info.get("role", 400) <= 300
                     or user_info.get("is_admin") is True
                     or user_info.get("is_owner") is True
-                    and user_info.get("is_guest") is False
-                ):
+                ) and (user_info.get("is_guest") is False):
                     return None
                 else:
                     return "Only Admins, moderators and owners are allowed to type"
@@ -592,13 +591,10 @@ class Model:
                     user_info.get("role", 400) <= 400
                     or user_info.get("is_admin") is True
                     or user_info.get("is_owner") is True
-                    and user_info.get("is_guest") is False
-                ):
+                ) and (user_info.get("is_guest") is False):
                     return None
                 else:
-                    return (
-                        "Only Admins, moderators, owners and members are allowed to type"
-                    )
+                    return "Only Admins, moderators, owners and members are allowed to type"
             else:
                 # Anyone can post
                 return None
@@ -733,8 +729,10 @@ class Model:
     def modernize_message_response(message: Message) -> Message:
         """
         Converts received message into the modern message response format.
+
         This provides a good single place to handle support for older server
         releases params, and making them compatible with recent releases.
+
         TODO: This could be extended for other message params in future.
         """
         # (1) `subject_links` param is changed to `topic_links` from
