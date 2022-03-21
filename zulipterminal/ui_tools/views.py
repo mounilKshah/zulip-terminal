@@ -28,6 +28,7 @@ from zulipterminal.config.ui_mappings import (
     EDIT_MODE_CAPTIONS,
     ROLE_BY_ID,
     STATE_ICON,
+    STREAM_POST_POLICY,
 )
 from zulipterminal.config.ui_sizes import LEFT_WIDTH
 from zulipterminal.helper import (
@@ -116,7 +117,7 @@ class MessageView(urwid.ListBox):
         focus_msg = self.model.get_focus_in_current_narrow()
         if focus_msg == set():
             focus_msg = len(msg_btn_list) - 1
-        # self.focus_msg = focus_msg
+        self.focus_msg = focus_msg
         return msg_btn_list
 
     @asynch
@@ -1329,23 +1330,18 @@ class StreamInfoView(PopUpView):
         #     stream_post_policy = stream.get("is_announcement_only")
 
         # print("Stream anP: ", stream_post_policy)
+        # posting_policy = STREAM_POST_POLICY[stream["stream_post_policy"]]
 
-        stream_posting_policy = {
-            1: "Any user can post",
-            2: "Only owners and admins can post",
-            3: "Only members can post",
-            4: "Only owners, admins and moderators can post",
-        }
         # posting_policy = stream_posting_policy[stream["stream_post_policy"]]
 
 
         if stream.get("stream_post_policy") is None:
             if stream.get("is_announcement_only"):
-                stream_policy = "Only admins can post"
+                stream_policy = STREAM_POST_POLICY[2]
             else:
-                stream_policy = "Any user can post"
+                stream_policy = STREAM_POST_POLICY[1]
         else:
-            stream_policy = stream_posting_policy[stream["stream_post_policy"]]
+            stream_policy = STREAM_POST_POLICY[stream["stream_post_policy"]]
 
 
             # if stream.get("stream_post_policy") == 2:
@@ -1433,7 +1429,7 @@ class StreamInfoView(PopUpView):
                         f"Press {email_keys} to copy Stream email address",
                     ),
                     ("History of Stream", f"{availability_of_history}"),
-                    ("Stream post policy", f"{stream_policy}"),
+                    ("Posting Policy", f"{stream_policy}"),
                 ],
             ),
             ("Stream settings", []),

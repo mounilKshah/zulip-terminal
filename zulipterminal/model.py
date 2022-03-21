@@ -1,4 +1,5 @@
 import json
+import pprint
 import time
 from collections import OrderedDict, defaultdict
 from concurrent.futures import Future, ThreadPoolExecutor, wait
@@ -555,43 +556,79 @@ class Model:
         stream or not using stream_post_policy and/or is_announcement_policy
         and accordingly update the footer
         """
-        stream_dict = self.stream_dict[stream_id]
+        # pprint.pprint(self.stream_dict)
+        # def is_provisional_member(self) -> bool:
+        #     if self.is_moderator:
+        #         return False
+        #     diff = (timezone_now() - self.date_joined).days
+        #     if diff < self.realm.waiting_period_threshold:
+        #         return True
+        #     return False
+
+        # fetch_types = self.initial_data_to_fetch
+        # event_types = list(self.event_actions)
+
+        # try:
+        #     response = self.client.register(
+        #         # event_types=event_types,
+        #         fetch_event_types=fetch_types
+        #     )
+        # except zulip.ZulipError as e:
+        #     return str(e)
+        # fetch_types = self.initial_data_to_fetch
+        # event_types = list(self.event_actions)
+
+        # try:
+        #     response = self.client.register(
+        #         event_types=event_types,
+        #         fetch_event_types=fetch_types
+        #     )
+        # except zulip.ZulipError as e:
+        #     return str(e)
+
+        # pprint.pprint(response)
+        if stream_id in self.stream_dict:
+            stream = self.stream_dict[stream_id]
+        else:
+            return "Stream ID is invalid"
         user_info = self._all_users_by_id.get(self.user_id, None)
         if not user_info:
             # Check whether the given user id is valid or not
             return "User does not exist"
+
+        if user_info.get("role") is None:
+            if user_info.get("is_owner"):
+                role = 100
+            elif user_info.get("is_admin"):
+                role = 200
+            elif user_info.get("is_guest"):
+                role = 600
+            else:
+                role = 400
+        else:
+            role = user_info["role"]
+
         if (
-            stream_dict.get("is_announcement_only")
-            or stream_dict.get("stream_post_policy") == 2
+            stream.get("is_announcement_only")
+            or stream.get("stream_post_policy") == 2
         ):
             # For admins and owners only (not using user role)
-            if (
-                user_info.get("is_admin")
-                or user_info.get("is_owner")
-                and user_info.get("is_guest") is False
-            ):
+            if role <= 200:
                 return None
             else:
                 return "Only Admins and owners can type"
-        elif stream_dict.get("stream_post_policy") is not None:
+        elif stream.get("stream_post_policy") is not None:
             # is_announcement_only is deprecated in Zulip 3.0+ -> stream_post_policy (ZFL 1)
-            if stream_dict.get("stream_post_policy") == 4:
+            if stream.get("stream_post_policy") == 4:
                 # Check for moderators only stream
-                if (
-                    user_info.get("role", 400) <= 300
-                    or user_info.get("is_admin") is True
-                    or user_info.get("is_owner") is True
-                ) and (user_info.get("is_guest") is False):
+                if role <= 300:
                     return None
                 else:
+                    # print("Only Admins, moderators and owners are allowed to type")
                     return "Only Admins, moderators and owners are allowed to type"
-            elif stream_dict.get("stream_post_policy") == 3:
+            elif stream.get("stream_post_policy") == 3:
                 # Check for 'members' in the stream
-                if (
-                    user_info.get("role", 400) <= 400
-                    or user_info.get("is_admin") is True
-                    or user_info.get("is_owner") is True
-                ) and (user_info.get("is_guest") is False):
+                if role <= 400:
                     return None
                 else:
                     return "Only Admins, moderators, owners and members are allowed to type"

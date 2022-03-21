@@ -40,3 +40,10 @@ ROLE_BY_ID: Dict[Optional[int], Dict[str, str]] = {
     400: {"bool": "", "name": "Member"},
     600: {"bool": "is_guest", "name": "Guest"},
 }
+
+STREAM_POST_POLICY = {
+    1: "Any user can post.",
+    2: "Only organization admins can send to this stream.",
+    3: "Guests cannot send to this stream.",
+    4: "Only organization admins and moderators can send to this stream.",
+}

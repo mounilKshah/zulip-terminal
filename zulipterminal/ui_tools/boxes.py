@@ -1737,7 +1737,7 @@ class MessageBox(urwid.Pile):
                     self.message["stream_id"]
                 )
                 if is_unauthorised_warning is not None:
-                    print(is_unauthorised_warning)
+                    # print(is_unauthorised_warning)
                     self.model.controller.report_warning(is_unauthorised_warning)
                     return key
 

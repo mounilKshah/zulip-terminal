@@ -14,7 +14,6 @@ from zulipterminal.model import (
     MAX_TOPIC_NAME_LENGTH,
     Model,
     ServerConnectionFailure,
-    UserSettings,
 )
 
 
@@ -110,42 +109,6 @@ class TestModel:
         assert model.active_emoji_data["zulip"]["type"] == "zulip_extra_emoji"
 
     @pytest.mark.parametrize(
-        "sptn, expected_sptn_value",
-        [(None, True), (True, True), (False, False)],
-    )
-    def test_init_user_settings(self, mocker, initial_data, sptn, expected_sptn_value):
-        assert "user_settings" not in initial_data  # we add it in tests
-
-        if sptn is not None:
-            initial_data["user_settings"] = {"send_private_typing_notifications": sptn}
-
-        mocker.patch(MODEL + ".get_messages", return_value="")
-        self.client.register = mocker.Mock(return_value=initial_data)
-
-        model = Model(self.controller)
-
-        assert model.user_settings() == UserSettings(
-            send_private_typing_notifications=expected_sptn_value,
-            twenty_four_hour_time=initial_data["twenty_four_hour_time"],
-            pm_content_in_desktop_notifications=initial_data[
-                "pm_content_in_desktop_notifications"
-            ],
-        )
-
-    def test_user_settings_expected_contents(self, model):
-        expected_keys = {
-            "send_private_typing_notifications",
-            "twenty_four_hour_time",
-            "pm_content_in_desktop_notifications",
-        }
-        settings = model.user_settings()
-        assert set(settings) == expected_keys
-
-        # Ensure original settings are unchanged through accessor
-        settings["foo"] = "bar"
-        assert set(model._user_settings) == expected_keys
-
-    @pytest.mark.parametrize(
         "server_response, locally_processed_data, zulip_feature_level",
         [
             (
@@ -233,7 +196,6 @@ class TestModel:
             "update_message_flags",
             "update_global_notifications",
             "update_display_settings",
-            "user_settings",
             "realm_emoji",
         ]
         fetch_event_types = [
@@ -248,7 +210,6 @@ class TestModel:
             "realm_user_groups",
             "update_global_notifications",
             "update_display_settings",
-            "user_settings",
             "realm_emoji",
             "zulip_version",
         ]
@@ -712,7 +673,6 @@ class TestModel:
         mock_api_query = mocker.patch(
             CONTROLLER + ".client.set_typing_status", return_value=response
         )
-        model._user_settings["send_private_typing_notifications"] = True
 
         model.send_typing_status_by_user_ids(recipient_user_ids, status=status)
 
@@ -728,20 +688,6 @@ class TestModel:
     ):
         with pytest.raises(RuntimeError):
             model.send_typing_status_by_user_ids(recipient_user_ids, status=status)
-
-    @pytest.mark.parametrize("recipient_user_ids", [[5140], [5140, 5179]])
-    @pytest.mark.parametrize("status", ["start", "stop"])
-    def test_send_typing_status_avoided_due_to_user_setting(
-        self, mocker, model, status, recipient_user_ids
-    ):
-        model._user_settings["send_private_typing_notifications"] = False
-
-        mock_api_query = mocker.patch(CONTROLLER + ".client.set_typing_status")
-
-        model.send_typing_status_by_user_ids(recipient_user_ids, status=status)
-
-        assert not mock_api_query.called
-        assert not self.display_error_if_present.called
 
     @pytest.mark.parametrize(
         "response, return_value",
@@ -805,181 +751,151 @@ class TestModel:
             self.notify_if_message_sent_outside_narrow.assert_called_once_with(
                 req, self.controller
             )
-
+    @pytest.mark.one
     @pytest.mark.parametrize(
         "user_role, stream_properties",
         [
-            # is admin :: announcement_only :: 2.1
-            (
+            case(
                 {"is_admin": True},
                 {"is_announcement_only": True},
+                id="is_admin:announcement_only:Zulip2.1",
             ),
-            # is admin :: not_announcement_only :: 2.1
-            (
+            case(
                 {"is_admin": True},
                 {"is_announcement_only": False},
+                id="is_admin:not_announcement_only:Zulip2.1",
             ),
-            # is not admin :: not_announcement_only :: 2.1
-            (
+            case(
                 {"is_admin": False},
                 {"is_announcement_only": False},
+                id="is_not_admin:not_announcement_only:Zulip2.1",
             ),
-            # is owner :: anyone_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": True, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 1},
+                id="is_owner:anyone_can_post:Zulip3.0+:ZFL8",
             ),
-            # is owner :: only_admins_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": True, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": True, "stream_post_policy": 2},
+                id="is_owner:admins_only:Zulip3.0+:ZFL8",
             ),
-            # is owner :: only_members_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": True, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 3},
+                id="is_owner:members_only:Zulip3.0+:ZFL8",
             ),
-            # is owner :: only_moderators_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": True, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 4},
+                id="is_owner:moderators_only:Zulip3.0+:ZFL8",
             ),
-            # is admin :: anyone_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 1},
+                id="is_admin:anyone_can_post:Zulip3.0+:ZFL8",
             ),
-            # is admin :: only_admins_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": True, "stream_post_policy": 2},
+                id="is_admin:admins_only:Zulip3.0+:ZFL8",
             ),
-            # is admin :: only_members_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 3},
+                id="is_admin:members_only:Zulip3.0+:ZFL8",
             ),
-            # is admin :: only_members_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": True, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 4},
+                id="is_admin:moderators_only:Zulip3.0+:ZFL8",
             ),
-            # is member :: anyone_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": False, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 1},
+                id="is_member:anyone_can_post:Zulip3.0+:ZFL8",
             ),
-            # is member :: only_members_can_post :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": False, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 3},
+                id="is_member:members_only:Zulip3.0+:ZFL8",
             ),
-            # is guest :: anyone_can_post :: ZFL 59
-            (
+            case(
                 {"is_owner": False, "is_admin": False, "is_guest": True},
                 {"is_announcement_only": False, "stream_post_policy": 1},
+                id="is_guest:anyone_can_post:Zulip3.0+:ZFL8",
             ),
-            # is_owner :: anyone_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": True, "is_owner": True, "is_guest": False, "role": 100},
                 {"is_announcement_only": False, "stream_post_policy": 1},
+                id="is_owner:anyone_can_post:Zulip4.0+:ZFL59",
             ),
-            # is owner :: only_admins_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": True, "is_owner": True, "is_guest": False, "role": 100},
                 {"is_announcement_only": True, "stream_post_policy": 2},
+                id="is_owner:admins_only:Zulip4.0+:ZFL59",
             ),
-            # is owner :: only_members_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": True, "is_owner": True, "is_guest": False, "role": 100},
                 {"is_announcement_only": False, "stream_post_policy": 3},
+                id="is_owner:members_only:Zulip4.0+:ZFL59",
             ),
-            # is owner :: only_moderators_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": True, "is_owner": True, "is_guest": False, "role": 100},
                 {"is_announcement_only": False, "stream_post_policy": 4},
+                id="is_owner:moderators_only:Zulip4.0+:ZFL59",
             ),
-            # is admin :: anyone_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": True, "is_owner": False, "is_guest": False, "role": 200},
                 {"is_announcement_only": False, "stream_post_policy": 1},
+                id="is_admin:anyone_can_post:Zulip4.0+:ZFL59",
             ),
-            # is admin :: only_admins_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": True, "is_owner": False, "is_guest": False, "role": 200},
                 {"is_announcement_only": True, "stream_post_policy": 2},
+                id="is_admin:admins_only:Zulip4.0+:ZFL59",
             ),
-            # is admin :: only_members_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": True, "is_owner": False, "is_guest": False, "role": 200},
                 {"is_announcement_only": False, "stream_post_policy": 3},
+                id="is_admin:members_only:Zulip4.0+:ZFL59",
             ),
-            # is admin :: only_members_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": True, "is_owner": False, "is_guest": False, "role": 200},
                 {"is_announcement_only": False, "stream_post_policy": 4},
+                id="is_admin:moderators_only:Zulip4.0+:ZFL59",
             ),
-            # is_moderator :: anyone_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 300},
                 {"is_announcement_only": False, "stream_post_policy": 1},
+                id="is_moderator:anyone_can_post:Zulip4.0+:ZFL59",
             ),
-            # is_moderator :: only_members_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 300},
                 {"is_announcement_only": False, "stream_post_policy": 3},
+                id="is_moderator:admins_only:Zulip4.0+:ZFL59",
             ),
-            # is_moderator :: only_moderators_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 300},
                 {"is_announcement_only": False, "stream_post_policy": 4},
+                id="is_moderator:moderators_only:Zulip4.0+:ZFL59",
             ),
-            # is_member :: anyone_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 400},
                 {"is_announcement_only": False, "stream_post_policy": 1},
+                id="is_member:anyone_can_post:Zulip4.0+:ZFL59",
             ),
-            # is_member :: only_members_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 400},
                 {"is_announcement_only": False, "stream_post_policy": 3},
+                id="is_member:members_only:Zulip4.0+:ZFL59",
             ),
-            # is_guest :: anyone_can_post :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": True, "role": 600},
                 {"is_announcement_only": False, "stream_post_policy": 1},
+                id="is_guest:anyone_can_post:Zulip4.0+:ZFL59",
             ),
         ],
-        ids=[
-            "is_admin:announcement_only:Zulip2.1",
-            "is_admin:not_announcement_only:Zulip2.1",
-            "is_not_admin:not_announcement_only:Zulip2.1",
-            "is_owner:anyone_can_post:Zulip3.0+:ZFL8",
-            "is_owner:admins_only:Zulip3.0+:ZFL8",
-            "is_owner:members_only:Zulip3.0+:ZFL8",
-            "is_owner:moderators_only:Zulip3.0+:ZFL8",
-            "is_admin:anyone_can_post:Zulip3.0+:ZFL8",
-            "is_admin:admins_only:Zulip3.0+:ZFL8",
-            "is_admin:members_only:Zulip3.0+:ZFL8",
-            "is_admin:moderators_only:Zulip3.0+:ZFL8",
-            "is_member:anyone_can_post:Zulip3.0+:ZFL8",
-            "is_member:members_only:Zulip3.0+:ZFL8",
-            "is_guest:anyone_can_post:Zulip3.0+:ZFL8",
-            "is_owner:anyone_can_post:Zulip4.0+:ZFL59",
-            "is_owner:admins_only:Zulip4.0+:ZFL59",
-            "is_owner:members_only:Zulip4.0+:ZFL59",
-            "is_owner:moderators_only:Zulip4.0+:ZFL59",
-            "is_admin:anyone_can_post:Zulip4.0+:ZFL59",
-            "is_admin:admins_only:Zulip4.0+:ZFL59",
-            "is_admin:members_only:Zulip4.0+:ZFL59",
-            "is_admin:moderators_only:Zulip4.0+:ZFL59",
-            "is_moderator:anyone_can_post:Zulip4.0+:ZFL59",
-            "is_moderator:admins_only:Zulip4.0+:ZFL59",
-            "is_moderator:moderators_only:Zulip4.0+:ZFL59",
-            "is_member:anyone_can_post:Zulip4.0+:ZFL59",
-            "is_member:members_only:Zulip4.0+:ZFL59",
-            "is_guest:anyone_can_post:Zulip4.0+:ZFL59",
-        ],        
     )
     def test_is_unauthorised_to_post_in_stream_can_post(
         self,
@@ -997,96 +913,82 @@ class TestModel:
         model.user_id = 11
         assert model.is_unauthorised_to_post_in_stream(stream_id=99) is None
 
-    # @pytest.mark.two
+    @pytest.mark.two
     @pytest.mark.parametrize(
         "user_role, stream_properties, expected_response",
         [
-            # is not admin of the stream 2.1
-            (
+            case(
                 {"is_admin": False},
                 {"is_announcement_only": True},
                 "Only Admins and owners can type",
+                id="is_not_admin:announcement_only:Zulip2.1",
             ),
-            # is_member :: admins_only :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": False, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 2},
                 "Only Admins and owners can type",
+                id="is_member:admins_only:Zulip3.0+:ZFL8",
             ),
-            # is member :: moderators_only :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": False, "is_guest": False},
                 {"is_announcement_only": False, "stream_post_policy": 4},
                 "Only Admins, moderators and owners are allowed to type",
+                id="is_member:moderators_only:Zulip3.0+:ZFL8",
             ),
-            # is guest :: admins_only :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": False, "is_guest": True},
                 {"is_announcement_only": False, "stream_post_policy": 2},
                 "Only Admins and owners can type",
+                id="is_guest:admins_only:Zulip3.0+:ZFL8",
             ),
-            # is guest :: members_only :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": False, "is_guest": True},
                 {"is_announcement_only": False, "stream_post_policy": 3},
                 "Only Admins, moderators, owners and members are allowed to type",
+                id="is_guest:members_only:Zulip3.0+:ZFL8",
             ),
-            # is guest :: moderators_only :: ZFL 8
-            (
+            case(
                 {"is_owner": False, "is_admin": False, "is_guest": True},
                 {"is_announcement_only": False, "stream_post_policy": 4},
                 "Only Admins, moderators and owners are allowed to type",
+                id="is_guest:moderators_only:Zulip3.0+:ZFL8",
             ),
-            # is_moderator :: admins_only :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 300},
                 {"is_announcement_only": False, "stream_post_policy": 2},
                 "Only Admins and owners can type",
+                id="is_moderator:admins_only:Zulip4.0+:ZFL59",
             ),
-            # is_member :: admins_only :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 400},
                 {"is_announcement_only": False, "stream_post_policy": 2},
                 "Only Admins and owners can type",
+                id="is_member:admins_only:Zulip4.0+:ZFL59",
             ),
-            # is_member :: moderators_only :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": False, "role": 400},
                 {"is_announcement_only": False, "stream_post_policy": 4},
                 "Only Admins, moderators and owners are allowed to type",
+                id="is_member:moderators_only:Zulip4.0+:ZFL59",
             ),
-            # is_guest :: admins_only :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": True, "role": 600},
                 {"is_announcement_only": False, "stream_post_policy": 2},
                 "Only Admins and owners can type",
+                id="is_guest:admins_only:Zulip4.0+:ZFL59",
             ),
-            # is_guest :: members_only :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": True, "role": 600},
                 {"is_announcement_only": False, "stream_post_policy": 3},
                 "Only Admins, moderators, owners and members are allowed to type",
+                id="is_guest:members_only:Zulip4.0+:ZFL59",
             ),
-            # is_guest :: moderators_only :: ZFL 59
-            (
+            case(
                 {"is_admin": False, "is_owner": False, "is_guest": True, "role": 600},
                 {"is_announcement_only": False, "stream_post_policy": 4},
                 "Only Admins, moderators and owners are allowed to type",
+                id="is_guest:moderators_only:Zulip4.0+:ZFL59",
             ),
-        ],
-        ids=[
-            "is_not_admin:announcement_only:Zulip2.1",
-            "is_member:admins_only:Zulip3.0+:ZFL8",
-            "is_member:moderators_only:Zulip3.0+:ZFL8",
-            "is_guest:admins_only:Zulip3.0+:ZFL8",
-            "is_guest:members_only:Zulip3.0+:ZFL8",
-            "is_guest:moderators_only:Zulip3.0+:ZFL8",
-            "is_moderator:admins_only:Zulip4.0+:ZFL59",
-            "is_member:admins_only:Zulip4.0+:ZFL59",
-            "is_member:moderators_only:Zulip4.0+:ZFL59",
-            "is_guest:admins_only:Zulip4.0+:ZFL59",
-            "is_guest:members_only:Zulip4.0+:ZFL59",
-            "is_guest:moderators_only:Zulip4.0+:ZFL59",
         ],
     )
     def test_is_unauthorised_to_post_in_stream_cannot_post(
@@ -3336,32 +3238,6 @@ class TestModel:
         for stream_id in stream_ids:
             new_subscribers = model.stream_dict[stream_id]["subscribers"]
             assert new_subscribers == expected_subscribers
-
-    @pytest.mark.parametrize("value", [True, False])
-    def test__handle_user_settings_event(self, mocker, model, value):
-        setting = "send_private_typing_notifications"
-        event = {
-            "type": "user_settings",
-            "op": "update",
-            "property": setting,
-            "value": value,
-        }
-        model._handle_user_settings_event(event)
-        assert model.user_settings()[setting] == value
-
-    @pytest.mark.parametrize("setting", [True, False])
-    def test_update_pm_content_in_desktop_notifications(self, mocker, model, setting):
-        setting_name = "pm_content_in_desktop_notifications"
-        event = {
-            "type": "update_global_notifications",
-            "notification_name": setting_name,
-            "setting": setting,
-        }
-        model._user_settings[setting_name] = not setting
-
-        model._handle_update_global_notifications_event(event)
-
-        assert model.user_settings()[setting_name] == setting
 
     @pytest.mark.parametrize("setting", [True, False])
     def test_update_twenty_four_hour_format(self, mocker, model, setting):

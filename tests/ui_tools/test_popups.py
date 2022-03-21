@@ -1176,6 +1176,7 @@ class TestStreamInfoView:
             stream_id=self.stream_id,
         )
 
+    @pytest.mark.ten
     @pytest.mark.parametrize(
         [
             "to_vary_in_stream_data",
@@ -1188,7 +1189,7 @@ class TestStreamInfoView:
                 {"date_created": None, "is_announcement_only": True},
                 "74 [Organization default]",
                 None,
-                16,
+                17,
                 id="ZFL=None_no_date_created__no_retention_days__admins_only",
             ),
             case(
@@ -1199,10 +1200,7 @@ class TestStreamInfoView:
                 id="ZFL=None_no_date_created__no_retention_days__anyone_can_type",
             ),
             case(
-                {
-                    "date_created": None,
-                    "stream_post_policy": 1,
-                },
+                {"date_created": None, "stream_post_policy": 1},
                 "74 [Organization default]",
                 16,
                 16,
@@ -1212,7 +1210,7 @@ class TestStreamInfoView:
                 {"date_created": None, "message_retention_days": 200, "stream_post_policy": 2,},
                 "200",
                 17,
-                16,
+                17,
                 id="ZFL<30_no_date_created__ZFL=17_custom_finite_retention_days",
             ),
             case(
@@ -1233,7 +1231,7 @@ class TestStreamInfoView:
                 {"date_created": 1472047124, "message_retention_days": None, "stream_post_policy": 2,},
                 "72 [Organization default]",
                 40,
-                17,
+                18,
                 id="ZFL>30_with_date_created__ZFL>17_default_finite_retention_days",
             ),
             case(
