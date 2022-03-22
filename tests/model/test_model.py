@@ -107,6 +107,7 @@ class TestModel:
         assert model.active_emoji_data["joker"]["type"] == "realm_emoji"
         # zulip_extra_emoji replaces all other emoji types for 'zulip' emoji.
         assert model.active_emoji_data["zulip"]["type"] == "zulip_extra_emoji"
+        assert model.twenty_four_hr_format == initial_data["twenty_four_hour_time"]
 
     @pytest.mark.parametrize(
         "server_response, locally_processed_data, zulip_feature_level",
