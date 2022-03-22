@@ -42,8 +42,8 @@ ROLE_BY_ID: Dict[Optional[int], Dict[str, str]] = {
 }
 
 STREAM_POST_POLICY = {
-    1: "Any user can post.",
-    2: "Only organization admins can send to this stream.",
-    3: "Guests cannot send to this stream.",
-    4: "Only organization admins and moderators can send to this stream.",
+    1: "Any user can post",
+    2: "Only organization admins can send to this stream",
+    3: "Only organization administrators, moderators and full members can send to this stream",
+    4: "Only organization admins and moderators can send to this stream",
 }

@@ -1324,25 +1324,13 @@ class StreamInfoView(PopUpView):
         self.controller = controller
         stream = controller.model.stream_dict[stream_id]
 
-        # stream_post_policy = stream.get("stream_post_policy")
-
-        # if stream_post_policy is None:
-        #     stream_post_policy = stream.get("is_announcement_only")
-
-        # print("Stream anP: ", stream_post_policy)
-        # posting_policy = STREAM_POST_POLICY[stream["stream_post_policy"]]
-
-        # posting_policy = stream_posting_policy[stream["stream_post_policy"]]
-
-
-        if stream.get("stream_post_policy") is None:
+        if "stream_post_policy" in stream:
+            stream_policy = STREAM_POST_POLICY[stream["stream_post_policy"]]
+        else:
             if stream.get("is_announcement_only"):
                 stream_policy = STREAM_POST_POLICY[2]
             else:
                 stream_policy = STREAM_POST_POLICY[1]
-        else:
-            stream_policy = STREAM_POST_POLICY[stream["stream_post_policy"]]
-
 
             # if stream.get("stream_post_policy") == 2:
             #     stream_policy = "Only owners and admins can post"
