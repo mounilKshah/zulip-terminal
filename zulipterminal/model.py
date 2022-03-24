@@ -608,10 +608,7 @@ class Model:
         else:
             role = user_info["role"]
 
-        if (
-            stream.get("is_announcement_only")
-            or stream.get("stream_post_policy") == 2
-        ):
+        if stream.get("is_announcement_only") or stream.get("stream_post_policy") == 2:
             # For admins and owners only (not using user role)
             if role <= 200:
                 return None

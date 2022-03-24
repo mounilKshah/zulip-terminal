@@ -752,6 +752,7 @@ class TestModel:
             self.notify_if_message_sent_outside_narrow.assert_called_once_with(
                 req, self.controller
             )
+
     @pytest.mark.one
     @pytest.mark.parametrize(
         "user_role, stream_properties",

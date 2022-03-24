@@ -239,7 +239,7 @@ class View(urwid.WidgetWrap):
         # i = 0
         print(self.controller.is_in_editor_mode())
         # i = i+1
-        # print(self.write_box)  
+        # print(self.write_box)
         self.model.new_user_input = True
         if self.controller.is_in_editor_mode():
             # if key == 'enter':

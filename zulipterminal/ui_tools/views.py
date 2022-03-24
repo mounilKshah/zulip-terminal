@@ -1202,14 +1202,14 @@ class UserInfoView(PopUpView):
             print("Print role of user in the stream: ", data["role"])
             # data:
             # {
-            #     'full_name': 'Neil Pilgrim (neiljp)', 
-            #     'email': 'user2406@chat.zulip.org', 
-            #     'date_joined': '2017-05-22T17:21:00.711831+00:00', 
-            #     'timezone': 'America/Los_Angeles', 
-            #     'is_bot': False, 
-            #     'role': 300, 
-            #     'bot_type': None, 
-            #     'bot_owner_name': '', 
+            #     'full_name': 'Neil Pilgrim (neiljp)',
+            #     'email': 'user2406@chat.zulip.org',
+            #     'date_joined': '2017-05-22T17:21:00.711831+00:00',
+            #     'timezone': 'America/Los_Angeles',
+            #     'is_bot': False,
+            #     'role': 300,
+            #     'bot_type': None,
+            #     'bot_owner_name': '',
             #     'last_active': ''
             #     }
 
@@ -1340,7 +1340,6 @@ class StreamInfoView(PopUpView):
             #     stream_policy = "Guests cannot post"
             # else:
             #     stream_policy = "Anyone can post"
-                
 
         # New in feature level 30, server version 4.0
         stream_creation_date = stream["date_created"]

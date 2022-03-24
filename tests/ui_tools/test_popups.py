@@ -1207,28 +1207,44 @@ class TestStreamInfoView:
                 id="ZFL<30_no_date_created__ZFL<17_no_retention_days",
             ),
             case(
-                {"date_created": None, "message_retention_days": 200, "stream_post_policy": 2,},
+                {
+                    "date_created": None,
+                    "message_retention_days": 200,
+                    "stream_post_policy": 2,
+                },
                 "200",
                 17,
                 17,
                 id="ZFL<30_no_date_created__ZFL=17_custom_finite_retention_days",
             ),
             case(
-                {"date_created": None, "message_retention_days": None, "stream_post_policy": 3,},
+                {
+                    "date_created": None,
+                    "message_retention_days": None,
+                    "stream_post_policy": 3,
+                },
                 "Indefinite [Organization default]",
                 29,
                 16,
                 id="ZFL<30_no_date_created__ZFL>17_default_indefinite_retention_days",
             ),
             case(
-                {"date_created": 1472091253, "message_retention_days": 31, "stream_post_policy": 4,},
+                {
+                    "date_created": 1472091253,
+                    "message_retention_days": 31,
+                    "stream_post_policy": 4,
+                },
                 "31",
                 30,
                 18,
                 id="ZFL=30_with_date_created__ZFL>17_custom_finite_retention_days",
             ),
             case(
-                {"date_created": 1472047124, "message_retention_days": None, "stream_post_policy": 2,},
+                {
+                    "date_created": 1472047124,
+                    "message_retention_days": None,
+                    "stream_post_policy": 2,
+                },
                 "72 [Organization default]",
                 40,
                 18,

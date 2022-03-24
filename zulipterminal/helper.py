@@ -540,8 +540,8 @@ def unauthorised_warning(model: Any, stream_identifier: Any) -> bool:
     Identify target stream based on stream id or stream name
     and update footer based on the user rights.
     """
-    stream_policy = model.stream_dict[stream_identifier].get('stream_post_policy')
-    user_role = model.get_user_info(model.user_id).get('role')
+    stream_policy = model.stream_dict[stream_identifier].get("stream_post_policy")
+    user_role = model.get_user_info(model.user_id).get("role")
     print("----------------- Printing data from unauthorised warning -----------------")
     print("Post policy: ", stream_policy)
     print("user role: ", user_role)
@@ -555,9 +555,9 @@ def unauthorised_warning(model: Any, stream_identifier: Any) -> bool:
     # print("User role: ", user_role)
     # print("stream_post_policy: ", stream_policy)
 
-    if(int(stream_policy) == 2):
+    if int(stream_policy) == 2:
         print("---------- Admins only ----------")
-        if(user_role <= 200):
+        if user_role <= 200:
             # model.controller.view.write_box.stream_box_view(
             #     caption=message['display_recipient'],
             #     title=message['subject'],
@@ -566,14 +566,12 @@ def unauthorised_warning(model: Any, stream_identifier: Any) -> bool:
             return False
         else:
             print("Admins only")
-            model.controller.report_warning(
-                "Only Admins and owners can type"
-            )
+            model.controller.report_warning("Only Admins and owners can type")
             return True
 
-    elif(int(stream_policy) == 4):
+    elif int(stream_policy) == 4:
         print("---------- Moderators only ----------")
-        if(user_role <= 200):
+        if user_role <= 200:
             # model.controller.view.write_box.stream_box_view(
             #     caption=message['display_recipient'],
             #     title=message['subject'],
@@ -587,9 +585,9 @@ def unauthorised_warning(model: Any, stream_identifier: Any) -> bool:
             )
             return True
 
-    elif(int(stream_policy) == 3):
+    elif int(stream_policy) == 3:
         print("---------- Full members only ----------")
-        if(user_role <= 400):
+        if user_role <= 400:
             # model.controller.view.write_box.stream_box_view(
             #     caption=message['display_recipient'],
             #     title=message['subject'],
@@ -611,7 +609,6 @@ def unauthorised_warning(model: Any, stream_identifier: Any) -> bool:
         #     stream_id=stream_id,
         # )
         return False
-
 
     # if(user_role < 300):
     #     return False
@@ -647,6 +644,7 @@ def unauthorised_warning(model: Any, stream_identifier: Any) -> bool:
     #         return True
     #     else:
     #         return False
+
 
 def match_stream(
     data: List[Tuple[DataT, str]], search_text: str, pinned_streams: List[StreamData]
