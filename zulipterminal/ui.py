@@ -23,7 +23,7 @@ from zulipterminal.ui_tools.views import (
     TabView,
 )
 from zulipterminal.urwid_types import urwid_Box
-
+from urwid import raw_display
 
 class View(urwid.WidgetWrap):
     """
@@ -236,6 +236,8 @@ class View(urwid.WidgetWrap):
     def keypress(self, size: urwid_Box, key: str) -> Optional[str]:
         print("================ Printing the key ================")
         print(key)
+        cols, rows = raw_display.Screen().get_cols_rows()
+        print("Columns: ", cols, " and rows: ", rows)
         # i = 0
         print(self.controller.is_in_editor_mode())
         # i = i+1

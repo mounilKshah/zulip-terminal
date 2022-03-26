@@ -1,3 +1,4 @@
+import os
 import threading
 from collections import OrderedDict
 from datetime import datetime
@@ -217,6 +218,8 @@ class MessageView(urwid.ListBox):
                 return super().keypress(size, primary_key_for_command("SCROLL_UP"))
 
         elif is_command_key("SCROLL_DOWN", key) and not self.old_loading:
+            print("===== Length of log: =====")
+            print(len(self.log))
             if self.focus is not None and self.focus_position == len(self.log) - 1:
                 return self.keypress(size, primary_key_for_command("GO_DOWN"))
             else:
@@ -555,6 +558,9 @@ class MiddleColumnView(urwid.Frame):
         super().__init__(message_view, header=search_box, footer=write_box)
 
     def get_next_unread_topic(self) -> Optional[Tuple[int, str]]:
+        size = os.get_terminal_size()
+        print("------ Size of the terminal ----------")
+        print(size)
         topics = list(self.model.unread_counts["unread_topics"].keys())
         next_topic = False
         for topic in topics:
