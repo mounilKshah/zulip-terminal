@@ -1,4 +1,5 @@
 from typing import Any, Iterable, List, Optional
+import pprint
 
 import urwid
 
@@ -34,6 +35,12 @@ def create_msg_box_list(
             if model.narrow == []:  # Don't show in 'All messages'.
                 continue
         msg_flag: Optional[str] = "unread"
+        # print("------- Variable msg ------")
+        # if msg.get("content"):
+        #     print("Message content:")
+        #     pprint.pprint(msg.get("content"))
+        # else:
+        #     pprint.pprint(msg)
         flags = msg.get("flags")
         # update_messages sends messages with no flags
         # but flags are set to [] when fetching old messages.

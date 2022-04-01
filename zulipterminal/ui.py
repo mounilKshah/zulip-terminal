@@ -237,9 +237,9 @@ class View(urwid.WidgetWrap):
         print("================ Printing the key ================")
         print(key)
         cols, rows = raw_display.Screen().get_cols_rows()
-        print("Columns: ", cols, " and rows: ", rows)
+        # print("Columns: ", cols, " and rows: ", rows)
         # i = 0
-        print(self.controller.is_in_editor_mode())
+        # print(self.controller.is_in_editor_mode())
         # i = i+1
         # print(self.write_box)
         self.model.new_user_input = True

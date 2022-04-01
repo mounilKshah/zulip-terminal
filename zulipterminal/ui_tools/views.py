@@ -1,3 +1,4 @@
+import pprint
 import os
 import threading
 from collections import OrderedDict
@@ -187,13 +188,60 @@ class MessageView(urwid.ListBox):
 
     def keypress(self, size: urwid_Size, key: str) -> Optional[str]:
         if is_command_key("GO_DOWN", key) and not self.new_loading:
+
+            # if self.focus.original_widget.message["id"]:
+            #     return key
+
             try:
+                # print("before DOWN:")
+                # print(self.focus_position)
+                # print("===== Length of log: =====")
+                # print(len(self.log))
                 position = self.log.next_position(self.focus_position)
                 self.set_focus(position, "above")
                 self.set_focus_valign("middle")
+                middle, top, bottom = self.calculate_visible(size)
+                _body = self._get_body()
+                next, pos = self._body.get_next(position)
+
+                print("-------------- All three variables --------------")
+                print("----MIDDLE:----")
+                print("Middle rows:")
+                print(middle[0])
+                i = 0
+                j = 0
+                # print("Middle widget:")
+                # print(middle[1])
+                # print("middle focus position:")
+                # print(middle[2])
+                print("ROWS")
+                print(middle[3])
+                print("----TOP:----")
+                print("Trim_top: ", top[0])
+                print("Previous:")
+                for item in top[1]:
+                    print(i, "th, p_rows: ", item[2])
+                    i = i+1
+                # print(top[1][0][2])
+                print("----BOTTOM:----")
+                print("Trim_bottom: ", bottom[0])
+                print("Next:")
+                for btm_item in bottom[1]:
+                    print(j, "th, n_rows: ", btm_item[2])
+                    j = j+1
+                # print(bottom[1][0][2])
+                # print(bottom[1][0])
+
+                # print("_get_focus():")
+                # print(self._get_focus())
+                # print("get_focus():")
+                # print(self.get_focus())
+                # print("AFTER GOING DOWN:")
+                # print(self.focus_position)
 
                 return key
             except Exception:
+                print("Exception case called")
                 if self.focus:
                     id = self.focus.original_widget.message["id"]
                     self.load_new_messages(id)
@@ -201,9 +249,13 @@ class MessageView(urwid.ListBox):
 
         elif is_command_key("GO_UP", key) and not self.old_loading:
             try:
+                # print("before UP:")
+                # print(self.focus_position)
                 position = self.log.prev_position(self.focus_position)
                 self.set_focus(position, "below")
                 self.set_focus_valign("middle")
+                # print("AFTER GOING UP:")
+                # print(self.focus_position)
                 return key
             except Exception:
                 if self.focus:
@@ -218,8 +270,6 @@ class MessageView(urwid.ListBox):
                 return super().keypress(size, primary_key_for_command("SCROLL_UP"))
 
         elif is_command_key("SCROLL_DOWN", key) and not self.old_loading:
-            print("===== Length of log: =====")
-            print(len(self.log))
             if self.focus is not None and self.focus_position == len(self.log) - 1:
                 return self.keypress(size, primary_key_for_command("GO_DOWN"))
             else:
@@ -558,9 +608,9 @@ class MiddleColumnView(urwid.Frame):
         super().__init__(message_view, header=search_box, footer=write_box)
 
     def get_next_unread_topic(self) -> Optional[Tuple[int, str]]:
-        size = os.get_terminal_size()
-        print("------ Size of the terminal ----------")
-        print(size)
+        # size = os.get_terminal_size()
+        # print("------ Size of the terminal ----------")
+        # print(size)
         topics = list(self.model.unread_counts["unread_topics"].keys())
         next_topic = False
         for topic in topics:
