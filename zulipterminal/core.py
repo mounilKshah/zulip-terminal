@@ -1,3 +1,8 @@
+"""
+Defines the `Controller`, which sets up the
+`model`
+"""
+
 import itertools
 import os
 import signal

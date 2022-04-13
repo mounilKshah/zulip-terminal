@@ -1,3 +1,8 @@
+"""
+Stores terminal characters used to mark particular
+elements of the user interface
+"""
+
 INVALID_MARKER = "✗"
 STREAM_MARKER_PRIVATE = "P"
 STREAM_MARKER_PUBLIC = "#"

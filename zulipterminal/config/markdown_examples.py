@@ -1,3 +1,8 @@
+"""
+Examples of input markdown and corresponding html 
+output (rendered in markdown help)
+"""
+
 from typing import List
 
 from typing_extensions import TypedDict

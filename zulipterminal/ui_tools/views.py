@@ -1,3 +1,8 @@
+"""
+UI views for larger elements such as Streams,
+Messages, Topics, Help, etc
+"""
+
 import threading
 from collections import OrderedDict
 from datetime import datetime
