@@ -1,3 +1,7 @@
+"""
+Scripts bundled with the application
+"""
+
 import sys
 
 import urwid
