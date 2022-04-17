@@ -1,5 +1,6 @@
 """
-Defines the `Model`, fetching and storing data retrieved from the Zulip server
+Defines the `Model`, fetching and storing data retrieved 
+from the Zulip server
 """
 
 import json

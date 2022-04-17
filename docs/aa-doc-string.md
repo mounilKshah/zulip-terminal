@@ -32,12 +32,6 @@ Zulip Terminal uses [Zulip's API](https://zulip.com/api/) to store
 |                        | utils.py            | The `MessageBox` for every message displayed is created here                                           |
 |                        | views.py            | UI views for larger elements such as Streams, Messages, Topics, Help, etc                              |
 |                        |                     |                                                                                                        |
-| zulipterminal/ui_tools | boxes.py            | UI boxes for displaying messages and entering text, such as `MessageBox`, `SearchBox`, `WriteBox`, etc.|
-|                        | buttons.py          | UI buttons for 'narrowing' and showing unread counts, such as Stream, PM, Topic, Home, Starred, etc    |
-|                        | tables.py           | Helper functions which render tables in the UI                                                         |
-|                        | utils.py            | The `MessageBox` for every message displayed is created here                                           |
-|                        | views.py            | UI views for larger elements such as Streams, Messages, Topics, Help, etc                              |
-|                        |                     |                                                                                                        |
 | zulipterminal/scripts  |                     | Scripts bundled with the application                                                                   |
 |                        |                     |                                                                                                        |
 | zulipterminal/themes   |                     | Themes bundled with the application                                                                    |

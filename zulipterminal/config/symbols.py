@@ -1,5 +1,5 @@
 """
-Stores terminal characters used to mark particular
+Terminal characters used to mark particular 
 elements of the user interface
 """
 

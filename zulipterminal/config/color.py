@@ -1,5 +1,5 @@
 """
-Contains color definitions or functions common across all themes.
+Color definitions or functions common across all themes
 """
 from enum import Enum
 from typing import Any

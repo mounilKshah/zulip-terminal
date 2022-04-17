@@ -1,6 +1,6 @@
 """
-Stores styles and their colour mappings in each theme,
-with helper functions
+Styles and their colour mappings
+in each theme, with helper functions
 """
 
 from typing import Any, Dict, List, Optional, Tuple, Union

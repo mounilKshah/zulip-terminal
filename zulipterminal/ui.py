@@ -1,5 +1,6 @@
 """
-Defines the `View`, and controls where each component is displayed
+Defines the `View`, and controls where 
+each component is displayed
 """
 
 import random

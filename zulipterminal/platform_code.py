@@ -1,6 +1,6 @@
 """
-Detection of supported platforms & platform-specific
-functions
+Detection of supported platforms 
+& platform-specific functions
 """
 
 import platform

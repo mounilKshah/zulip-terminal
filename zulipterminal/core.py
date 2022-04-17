@@ -1,6 +1,5 @@
 """
-Defines the `Controller`, which sets up the
-`model`
+Defines the `Controller`, which sets up the `model`
 """
 
 import itertools

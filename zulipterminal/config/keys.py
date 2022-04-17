@@ -1,5 +1,5 @@
 """
-Stores keybindings and their helper functions
+Keybindings and their helper functions
 """
 
 from collections import OrderedDict

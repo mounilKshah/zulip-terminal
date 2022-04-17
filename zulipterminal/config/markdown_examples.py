@@ -1,6 +1,6 @@
 """
-Examples of input markdown and corresponding html 
-output (rendered in markdown help)
+Examples of input markdown and corresponding html output 
+(rendered in markdown help)
 """
 
 from typing import List
