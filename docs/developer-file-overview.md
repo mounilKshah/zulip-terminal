@@ -18,7 +18,6 @@ Zulip Terminal uses [Zulip's API](https://zulip.com/api/) to store and retrieve 
 | zulipterminal/cli      | run.py              | Marks the entry point into the application                                                             |
 |                        |                     |                                                                                                        |
 | zulipterminal/config   | color.py            | Color definitions or functions common across all themes                                                |
-|                        | keys.py             | Keybindings and their helper functions                                                                 |
 |                        | markdown_examples.py| Examples of input markdown and corresponding html output (rendered in markdown help)                   |
 |                        | regexes.py          | Regular expression constants                                                                           |
 |                        | symbols.py          | Terminal characters used to mark particular elements of the user interface                             |

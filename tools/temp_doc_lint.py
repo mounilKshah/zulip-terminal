@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+from csv import field_size_limit
 import os
 from typing import Dict, List, Tuple, cast
 from os.path import isfile, join
@@ -27,7 +30,7 @@ THEMES = "zulipterminal/themes"
 THEMES_DESC = "Themes bundled with the application"
 
 BLANK_LINE_TUPLE = (" ", " ", " ")
-BLANK_LINE = f"| {23*SPACEBAR}| {20*SPACEBAR}| {103*SPACEBAR}|\n"
+BLANK_LINE = f"| {LENGTH_TUPLE[0]*SPACEBAR}| {LENGTH_TUPLE[1]*SPACEBAR}| {LENGTH_TUPLE[2]*SPACEBAR}|\n"
 
 
 def text_with_spaces(text_tuple, length_tuple=LENGTH_TUPLE):
@@ -41,6 +44,7 @@ def text_with_spaces(text_tuple, length_tuple=LENGTH_TUPLE):
     desc_name = desc_text + desc_spaces
     return (folder_name, file_name, desc_name)
 
+
 def write_to_file(new_files_list, current_doc_data, location):
     current_doc_data[(location) : (location - 1)] = new_files_list
     temp_list = new_files_list
@@ -51,38 +55,28 @@ def write_to_file(new_files_list, current_doc_data, location):
         file.write(updated_data)
     return location
 
+
 def generate_heirarchy_dict():
     rootdir = pathlib.Path(__file__).resolve().parent.parent
     print(rootdir)
-    # Return a list of regular files only, not directories
-    final_root = pathlib.Path(join(rootdir, 'zulipterminal'))
-    # print(type(final_root))
+    final_root = pathlib.Path(join(rootdir, "zulipterminal"))
     print(final_root)
     relative_path = final_root.relative_to(rootdir)
     print(relative_path)
-    # mport os
     path = pathlib.Path(__file__).resolve().parent.parent
-    # os.path.join(os.path.basename(os.path.dirname(p)), os.path.basename(p))
-    # This works on python 3:
 
-    # # str(p.relative_to(p.parent.parent))
-    # get_docstrings()
     folder_paths_dictionary = {}
 
     # file_list = []
-    
-    for f in final_root.glob('**/*'):
-        if f.is_dir(): # and f != '__init__.py':
+
+    for f in final_root.glob("**/*"):
+        if f.is_dir():  # and f != '__init__.py':
             # append_name = f.relative_to(rootdir)
             relative_path = f.relative_to(rootdir)
             print(relative_path)
 
             folder_paths_dictionary[str(relative_path)] = f
-    # file_list = [
-    #         file
-    #         for file in final_root.glob('**/*.py')
-    #         if (isfile(join(path, file)) and file != "__init__.py")
-    #         ]
+
     print("FILE DICTIONARY: ")
     pprint.pprint(folder_paths_dictionary)
     print("GET DOCSTRINGS PATHS: ")
@@ -90,12 +84,17 @@ def generate_heirarchy_dict():
     # for x in file_list:
     #     print(x)
 
+def split_string(long_string):
+    first_part = long_string[:104]
+    first_line = first_part.rsplit(' ', 1)
+    # print(first_line)
+    second_line = long_string.replace(first_line[0], '')
+    print("first_line: ", first_line[0])
+    print("second_line: ", second_line)
+    return (first_line[0], second_line)
 
 
-def get_docstrings() -> Tuple[Dict[str, str], Dict[str, List[str]]]:
-    # root = join(getcwd(), "zulipterminal")
-    # print(root)
-    # print(parent_root)
+def extract_folder_structure():
     folder_paths = {
         "zulipterminal": join(parent_root, "zulipterminal"),
         "zulipterminal/cli": join(parent_root, "zulipterminal", "cli"),
@@ -103,14 +102,19 @@ def get_docstrings() -> Tuple[Dict[str, str], Dict[str, List[str]]]:
         "zulipterminal/ui_tools": join(parent_root, "zulipterminal", "ui_tools"),
     }
     # print(folder_paths)
-    total_files = {}
+    folders_and_files = {}
     for folder, path in folder_paths.items():
         # print("Folder name: ", folder, ", path: ", path)
-        total_files[folder] = [
+        folders_and_files[folder] = [
             file
             for file in listdir(path)
             if (isfile(join(path, file)) and file != "__init__.py")
         ]
+    return folders_and_files
+
+def get_docstrings() -> Tuple[Dict[str, str], Dict[str, List[str]]]:
+    # root = join(getcwd(), "zulipterminal")
+    total_files = extract_folder_structure()
     file_doc_string = {}
     all_zt_files_dict = {}
     for folder, files in total_files.items():
@@ -126,39 +130,54 @@ def get_docstrings() -> Tuple[Dict[str, str], Dict[str, List[str]]]:
     # pprint.pprint(all_zt_files_dict)
     # print("Total files: ")
     # pprint.pprint(total_files)
-    pprint.pprint(file_doc_string)
-    return (all_zt_files_dict, total_files, file_doc_string)
+    # pprint.pprint(file_doc_string)
+    # return (all_zt_files_dict, total_files, file_doc_string)
+    return file_doc_string
 
 
 def create_file():
-    all_zt_files_dict, total_files, string_and_folders = get_docstrings()
+    string_and_folders = get_docstrings()
     with open(developer_doc, "r+") as file:
         doc_data = file.readlines()
 
     write_location = INDEX
-    doc_to_write = doc_data[:INDEX-1]
+    doc_to_write = doc_data[: INDEX - 1]
     print("Enters the function")
     print("Length: ", len(doc_to_write))
 
+    final_files_list = []
     for folder in string_and_folders:
         folder_printed = False
         dictionary_of_files = string_and_folders[str(folder)]
-        final_files_list = []
 
         folder_text = str(folder)
         for file in sorted(dictionary_of_files):
+            description_text = string_and_folders[folder][file]
             if folder_printed is True:
                 folder_text = " "
-            text_tuple = (folder_text, file, string_and_folders[folder][file])
-            folder_name, file_name, desc = text_with_spaces(text_tuple, LENGTH_TUPLE)
-            new_line = f"| {folder_name}| {file_name}| {desc}|\n"
-            final_files_list.append(new_line)
-            folder_printed = True
+            
+            if len(description_text) > LENGTH_TUPLE[2]:
+                first_line, second_line = split_string(description_text)
+                text_tuple = (folder_text, file, first_line)
+                folder_name, file_name, desc = text_with_spaces(text_tuple, LENGTH_TUPLE)
+                new_line = f"| {folder_name}| {file_name}| {desc}|\n"
+                final_files_list.append(new_line)
+                text_tuple = (folder_text, file, second_line)
+                folder_name, file_name, desc = text_with_spaces(text_tuple, LENGTH_TUPLE)
+                new_line = f"|{LENGTH_TUPLE[0]*SPACEBAR} | {LENGTH_TUPLE[1]*SPACEBAR}|{desc} |\n"
+                final_files_list.append(new_line)
+                folder_printed = True
+            else:
+                text_tuple = (folder_text, file, description_text)
+                folder_name, file_name, desc = text_with_spaces(text_tuple, LENGTH_TUPLE)
+                new_line = f"| {folder_name}| {file_name}| {desc}|\n"
+                final_files_list.append(new_line)
+                folder_printed = True
 
         folder_name, file_name, desc = text_with_spaces(BLANK_LINE_TUPLE, LENGTH_TUPLE)
         blank_line = f"| {folder_name}| {file_name}| {desc}|\n"
         final_files_list.append(BLANK_LINE)
-        write_location = write_to_file(final_files_list, doc_to_write, write_location)
+        # write_location = write_to_file(final_files_list, doc_to_write, write_location)
 
     SCRIPTS_TUPLE = (SCRIPTS, " ", SCRIPTS_DESC)
     folder_name, file_name, desc = text_with_spaces(SCRIPTS_TUPLE, LENGTH_TUPLE)
@@ -172,95 +191,96 @@ def create_file():
     themes_line = f"| {folder_name}| {file_name}| {desc}|\n"
 
     final_files_list.append(themes_line)
-    write_to_file(final_files_list[-3:], doc_to_write, write_location)
+    write_to_file(final_files_list, doc_to_write, write_location)
 
-def get_file_overview_doc_docstrings() -> Dict[str, str]:
-    with open(developer_doc, 'r') as file:
+
+def extract_docstrings_from_file_overview() -> Dict[str, str]:
+    with open(developer_doc, "r") as file:
         doc_data = file.readlines()
 
     # table is present from line 6 to (length - 1)
     computed_doc_dict = {}
     file_size = len(doc_data)
-    print(file_size)
+    # print(file_size)
     # for folder in range(INDEX-1, len(doc_data)):
     #     if str(folder)
-        # computed_doc_dict[str(folder)] = {}
-    
+    # computed_doc_dict[str(folder)] = {}
+
     folder_name = ""
-    for i in range(INDEX-1, len(doc_data)-4):
+    file_name = ""
+    for i in range(INDEX - 1, len(doc_data) - 4):
         _, folder, filename, docstring, _ = str(doc_data[i]).split("|")
         folder, filename = folder.strip(), filename.strip()
-        print("VALUE OF FOLDER: ", folder)
+        # print("VALUE OF FOLDER: ", folder)
         if folder:
             folder_name = folder
-            print("FOLDER_NAME: ", folder_name)
+            # print("FOLDER_NAME: ", folder_name)
             computed_doc_dict[str(folder_name)] = {}
-        if filename:
-            computed_doc_dict[str(folder_name)][str(filename)] = docstring.strip()
+        if docstring.strip():
+            print(filename)
+            if filename:
+                file_name = filename
+                computed_doc_dict[folder_name][file_name] = docstring.strip()
+            else:
+                computed_doc_dict[folder_name][file_name] = computed_doc_dict[folder_name][file_name] + SPACEBAR+ docstring.strip()
+                
+        #         print(f'{folder_file_docstring[folder][file]} is missing')
     # for i in range(6, len(doc_data)):
     #     _, _, filename, docstring, _ = str(doc_data[i]).split('|')
     #     filename = filename.strip()
     #     if filename:
     #         computed_doc_dict[filename] = docstring.strip()
-    # pprint.pprint(computed_doc_dict)
-    return (computed_doc_dict, file_size)
+    print(computed_doc_dict)
+    return computed_doc_dict
 
 
-def lint_files() -> None:
-    all_zt_files_dict, _ = get_docstrings()
-    computed_doc_dict, file_size = get_file_overview_doc_docstrings()
-
-    final_file_size = file_size - 6
-    print("FILE SIZE: ", final_file_size)
-
-    print("TOTAL SIZE: ", len(all_zt_files_dict))
-    # assert len(all_zt_files_dict) == file_size
-
+def lint_files():
+    folder_file_docstring = get_docstrings()
+    computed_doc_dict = extract_docstrings_from_file_overview()
+    missing_file = ""
     try:
-        for file in all_zt_files_dict:
-            assert all_zt_files_dict[str(file)] == computed_doc_dict[str(file)]
+        for folder in folder_file_docstring:
+            for file in folder_file_docstring[folder]:
+                missing_file = file
+                assert computed_doc_dict[folder][file] == folder_file_docstring[folder][file]
     except AssertionError:
+        # in case the docstrings do not match
         print("Docstrings changed")
-        print("Run './tools/docstring -fix' to fix")
+        print("Run './tools/lint-docstring -fix' to fix")
         sys.exit(1)
     except KeyError:
-        print("New File has been added")
-        print("Run './tools/docstring -fix' to fix")
+        # in case a new file is added and its docstring is not present in the document
+        print(f'{missing_file} has been added')
+        # print(str(folder_file_docstring[folder]))
+        print("Run './tools/lint-docstring -fix' to fix")
         sys.exit(1)
-
     print("Successful")
 
-    # assert all_zt_files_dict["zulipterminal"] == computed_doc_dict["zulipterminal"]
-    # except AssertionError:
-    #     print("Docstrings changed")
-    #     print("Run './tools/docstring -fix' to fix")
-    #     sys.exit(1)
-    # except KeyError:
-    #     print("New File has been added")
-    #     print("Run './tools/docstring -fix' to fix")
-    #     sys.exit(1)
-    # print("Successful")
 
+
+# linting_file()
+# temp_str = "Contains color definitions or functions common across all themes. For further details on themefiles look at the theme contribution guide."
+# split_string(temp_str)
 # lint_files()
-create_file()
-# get_file_overview_doc_docstrings()
+# create_file()
+# extract_docstrings_from_file_overview()
 # get_docstrings()
 # generate_heirarchy_dict()
 
-# def main(fix_file: bool=False) -> None:
-#     # if fix_file:
-#     #     create_file()
-#         # get_docstrings()
-#     # generate_heirarchy_dict()
-#     # else:
-#     lint_files()
+def main(fix_file: bool=False) -> None:
+    if fix_file:
+        create_file()
+        # get_docstrings()
+    # generate_heirarchy_dict()
+    else:
+        lint_files()
 
 
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser(description="Lint and fix docstrings"
-#                                                  "in all ZulipTerminal files")
-#     parser.add_argument('-fix', action='store_true',
-#                         help="""Update developer-file-overview with
-#                         docstrings of all files""")
-#     args = parser.parse_args()
-#     main(args.fix)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Lint and fix docstrings"
+                                                 "in all ZulipTerminal files")
+    parser.add_argument('-fix', action='store_true',
+                        help="""Update developer-file-overview with
+                        docstrings of all files""")
+    args = parser.parse_args()
+    main(args.fix)

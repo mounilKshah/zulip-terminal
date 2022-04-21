@@ -4,25 +4,26 @@ Zulip Terminal uses [Zulip's API](https://zulip.com/api/) to store
 
 | Folder                 | File                | Description                                                                                            |
 | ---------------------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
-| zulipterminal          | api_types.py        | Preliminary Zulip API types defined in python, to allow type checking                                  |
+| zulipterminal          | api_types.py        | Preliminary Zulip API types defined in python,  to allow type checking                                 |
 |                        | core.py             | Defines the `Controller`, which sets up the `model`                                                    |
 |                        | helper.py           | Helper functions used in multiple places                                                               |
-|                        | model.py            | Defines the `Model`, fetching and storing data retrieved from the Zulip server                         |
-|                        | platform_code.py    | Detection of supported platforms & platform-specific functions                                         |
+|                        | model.py            | Defines the `Model`, fetching and storing data retrieved  from the Zulip server                        |
+|                        | platform_code.py    | Detection of supported platforms  & platform-specific functions                                        |
 |                        | server_url.py       | Constructs and encodes server_url of messages.                                                         |
-|                        | ui.py               | Defines the `View`, and controls where each component is displayed                                     |
+|                        | ui.py               | Defines the `View`, and controls where  each component is displayed                                    |
 |                        | unicode_emojis.py   | Stores valid unicode emoji data                                                                        |
 |                        | urwid_types.py      | Preliminary urwid types to improve type analysis                                                       |
 |                        | version.py          | Keeps track of the version of the current code                                                         |
 |                        |                     |                                                                                                        |
 | zulipterminal/cli      | run.py              | Marks the entry point into the application                                                             |
 |                        |                     |                                                                                                        |
-| zulipterminal/config   | color.py            | Contains color definitions or functions common across all themes.                                      |
-|                        | keys.py             | Stores keybindings and their helper functions                                                          |
-|                        | markdown_examples.py| Examples of input markdown and corresponding html  output (rendered in markdown help)                  |
+| zulipterminal/config   | color.py            | Contains color definitions or functions common across all themes. For further details on themefiles    |
+|                        |                     | look at the theme contribution guide.                                                                  |
+|                        | keys.py             | Keybindings and their helper functions                                                                 |
+|                        | markdown_examples.py| Examples of input markdown and corresponding html output  (rendered in markdown help)                  |
 |                        | regexes.py          | Regular expression constants                                                                           |
-|                        | symbols.py          | Stores terminal characters used to mark particular elements of the user interface                      |
-|                        | themes.py           | Stores styles and their colour mappings in each theme, with helper functions                           |
+|                        | symbols.py          | Terminal characters used to mark particular  elements of the user interface                            |
+|                        | themes.py           | Styles and their colour mappings in each theme, with helper functions                                  |
 |                        | ui_mappings.py      | Relationships between state/API data and presentation in the UI                                        |
 |                        | ui_sizes.py         | Fixed sizes of UI elements                                                                             |
 |                        |                     |                                                                                                        |
