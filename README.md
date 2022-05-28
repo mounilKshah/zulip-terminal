@@ -231,10 +231,22 @@ Various options are available; we are exploring the benefits of each and would a
 
 Note that the tools used in each case are typically the same, but are called in different ways.
 
-With any option, you first need to clone the zulip/zulip-terminal repository locally (the following will place the repository in the current directory):
+#### Get Zulip-terminal Code and connect it to the upstream
+
+With any option, you first need to fork the zulip/zulip-terminal repository [see how](https://docs.github.com/en/get-started/quickstart/fork-a-repo) and then clone it locally (the following will place the repository in the current directory):
 ```
-$ git clone git@github.com:zulip/zulip-terminal.git
+$ git clone --config pull.rebase git@github.com:zulip/zulip-terminal.git
 ```
+
+Note: If you receive an error while cloning, you may not have added your ssh key to GitHub.
+
+Next, enter the zulip-terminal directory and run the command below to configure an upstream remote repository for your fork of Zulip to sync changes from the main project back into your fork:
+```
+git remote add -f upstream https://github.com/zulip/zulip.git
+```
+
+For more insight on the commands used for cloning the repository, refer to [this section](https://zulip.readthedocs.io/en/latest/git/cloning.html) of Zulip's Git guide.
+
 The following commands should be run in the repository directory, which can be achieved with `cd zulip-terminal`.
 
 #### Pipenv
