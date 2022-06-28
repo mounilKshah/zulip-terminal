@@ -215,6 +215,11 @@ class StreamButton(TopButton):
     def keypress(self, size: urwid_Size, key: str) -> Optional[str]:
         if is_command_key("TOGGLE_TOPIC", key):
             self.view.left_panel.show_topic_view(self)
+
+        elif is_command_key("STREAM_SUBSCRIBE", key):
+            print("stream_subscribe pressed")
+            self.model.controller.show_stream_list(self.stream_id)
+
         elif is_command_key("TOGGLE_MUTE_STREAM", key):
             self.controller.stream_muting_confirmation_popup(
                 self.stream_id, self.stream_name

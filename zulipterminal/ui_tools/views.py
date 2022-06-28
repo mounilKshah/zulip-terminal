@@ -1,4 +1,7 @@
+
+import time
 import threading
+import pprint
 from collections import OrderedDict
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
@@ -1315,6 +1318,112 @@ class PopUpConfirmationView(urwid.Overlay):
         return super().keypress(size, key)
 
 
+class StreamOptions(PopUpView):
+    def __init__(self, controller: Any, stream_id: int) -> None:
+        self.stream_id = stream_id
+        self.controller = controller
+        stream = controller.model.stream_dict[stream_id]
+
+        # New in feature level 30, server version 4.0
+
+        stream_access_type = controller.model.stream_access_type(stream_id)
+        # type_of_stream = STREAM_ACCESS_TYPE[stream_access_type]["description"]
+        stream_marker = STREAM_ACCESS_TYPE[stream_access_type]["icon"]
+
+        self.stream_email = stream["email_address"]
+
+
+        title = f"{stream_marker} {stream['name']}"
+        rendered_desc = stream["rendered_description"]
+        self.markup_desc, message_links, _ = MessageBox.transform_content(
+            rendered_desc,
+            self.controller.model.server_url,
+        )
+        desc = urwid.Text(self.markup_desc)
+        print("INFO_CONTENT reached within StreamOptions")
+
+        stream_info_content = [
+            ("Stream settings", []),
+        ]  # type: PopUpViewTableContent
+
+        popup_width, column_widths = self.calculate_table_widths(
+            stream_info_content, len(title)
+        )
+
+        subscribe_setting = urwid.CheckBox(
+            label="Subscribed",
+            state=controller.model.is_user_subscribed_to_stream(stream_id),
+            checked_symbol=CHECK_MARK,
+        )
+        urwid.connect_signal(subscribe_setting, "change", self.toggle_mute_status)
+        pinned_state = controller.model.is_pinned_stream(stream_id)
+
+        footlinks, footlinks_width = MessageBox.footlinks_view(
+            message_links=message_links,
+            maximum_footlinks=10,  # Show 'all', as no other way to add them
+            padded=False,
+            wrap="space",
+        )
+
+        # Manual because calculate_table_widths does not support checkboxes.
+        # Add 4 to checkbox label to accommodate the checkbox itself.
+        popup_width = max(
+            popup_width,
+            len(subscribe_setting.label) + 4,
+            desc.pack()[0],
+            footlinks_width,
+        )
+
+        self.widgets = self.make_table_with_categories(
+            stream_info_content, column_widths
+        )
+
+        desc_newline = 1
+        # if footlinks:
+        #     self.widgets.insert(1, footlinks)
+        #     desc_newline = 2
+        self.widgets.insert(desc_newline, urwid.Text(""))  # Add a newline.
+
+        self.widgets.append(subscribe_setting)
+
+        # self.controller = controller
+        model = controller.model
+
+        user_ids = model.get_other_subscribers_in_stream(stream_id=stream_id)
+        user_names = [model.user_name_from_id(id) for id in user_ids]
+        sorted_user_names = sorted(user_names)
+        sorted_user_names.insert(0, model.user_full_name)
+        title = "Stream Members (up/down scrolls)"
+
+        stream_users_content = [("", [(name, "") for name in sorted_user_names])]
+        popup_width, column_width = self.calculate_table_widths(
+            stream_users_content, len(title)
+        )
+        widgets = self.make_table_with_categories(stream_users_content, column_width)
+
+        # super().__init__(controller, self.widgets, "STREAM_SUBSCRIBE", popup_width, title)
+        super().__init__(controller, widgets, "STREAM_SUBSCRIBE", popup_width, title)
+
+    def toggle_mute_status(self, button: Any, new_state: bool) -> None:
+        self.controller.model.toggle_stream_muted_status(self.stream_id)
+
+    def toggle_subscription_status(self, button: Any, new_state: bool) -> None:
+        self.controller.model.toggle_stream_muted_status(self.stream_id)
+
+    def toggle_pinned_status(self, button: Any, new_state: bool) -> None:
+        self.controller.model.toggle_stream_pinned_status(self.stream_id)
+
+    def toggle_visual_notification(self, button: Any, new_state: bool) -> None:
+        self.controller.model.toggle_stream_visual_notifications(self.stream_id)
+
+    # def keypress(self, size: urwid_Size, key: str) -> str:
+    #     if is_command_key("STREAM_MEMBERS", key):
+    #         self.controller.show_stream_members(stream_id=self.stream_id)
+    #     # elif is_command_key("COPY_STREAM_EMAIL", key):
+    #     #     self.controller.copy_to_clipboard(self.stream_email, "Stream email")
+    #     return super().keypress(size, key)
+
+
 class StreamInfoView(PopUpView):
     def __init__(self, controller: Any, stream_id: int) -> None:
         self.stream_id = stream_id
@@ -1476,6 +1585,7 @@ class StreamInfoView(PopUpView):
         super().__init__(controller, self.widgets, "STREAM_DESC", popup_width, title)
 
     def toggle_mute_status(self, button: Any, new_state: bool) -> None:
+        print("view.StreamInfoView.toggle_stream_muted_status()")
         self.controller.model.toggle_stream_muted_status(self.stream_id)
 
     def toggle_pinned_status(self, button: Any, new_state: bool) -> None:
@@ -1490,6 +1600,126 @@ class StreamInfoView(PopUpView):
         elif is_command_key("COPY_STREAM_EMAIL", key):
             self.controller.copy_to_clipboard(self.stream_email, "Stream email")
         return super().keypress(size, key)
+
+
+class StreamListView(PopUpView):
+    def __init__(self, controller: Any, stream_id: int) -> None:
+        self.stream_id = stream_id
+        self.controller = controller
+        model = controller.model
+        # list_of_streams = model.get_streams_in_org()
+
+        # list_of_streams_in_org = model.get_all_streams_in_org()
+        # pprint.pprint(list_of_streams_in_org)
+
+        # TODO: add function to send the streams list and bifurcate into sub and unsub
+        # all_org_streams_list = model.get_all_streams_in_org()
+        subscribed_streams_list = model.get_subscribed_streams()
+
+        # sub_final_dict = model.get_only_stream_name_id(subscribed_streams_list)
+
+        # print("Time for finding UNSUBSCRIBED streams: ")
+        # start = time.process_time()
+        # unsubscribed_list = [x for x in all_org_streams_list if x not in subscribed_streams_list]
+        # unsub_final_dict = model.get_only_stream_name_id(unsubscribed_list)
+        sub_final_dict = model.get_only_stream_name_id(subscribed_streams_list)
+        # pprint.pprint(unsubscribed_list)
+        # print(time.process_time() - start)
+
+        # user_ids = model.get_other_subscribers_in_stream(stream_id=stream_id)
+        # user_names = [model.user_name_from_id(id) for id in user_ids]
+        # stream_names = sub_final_dict.keys()
+        stream_names = [*sub_final_dict]
+        sorted_stream_names = sorted(stream_names)
+        pprint.pprint(sorted_stream_names)
+        # sorted_user_names.insert(0, model.user_full_name)
+        title = "Stream Members (up/down scrolls)"
+
+        stream_names_final = [("", [(name, "") for name in sorted_stream_names])]
+        popup_width, column_width = self.calculate_table_widths(
+            stream_names_final, len(title)
+        )
+        print("Printing popup: ", popup_width, " and columne: ", column_width)
+        widgets = self.make_table_with_categories(stream_names_final, column_width)
+        print("widgets: ")
+        print(widgets)
+
+        # ----------------------------------------------------------------------------
+
+        subscription_checkbox = urwid.CheckBox(
+            label="Subscription Status",
+            state=controller.model.is_user_subscribed_to_stream(stream_id),
+            checked_symbol=CHECK_MARK,
+        )
+        widgets.append(subscription_checkbox)
+        urwid.connect_signal(subscription_checkbox, "change", self.toggle_subscribe_status)
+        super().__init__(controller, widgets, "STREAM_DESC", popup_width, title)
+
+    def toggle_subscribe_status(self, button: Any, new_state: bool) -> None:
+        self.controller.model.toggle_stream_subscription(self.stream_id)
+
+        # pinned_state = controller.model.is_pinned_stream(stream_id)
+        # pinned_setting = urwid.CheckBox(
+        #     label="Pinned to top", state=pinned_state, checked_symbol=CHECK_MARK
+        # )
+        # urwid.connect_signal(pinned_setting, "change", self.toggle_pinned_status)
+        # visual_notification = urwid.CheckBox(
+        #     label="Visual notifications (Terminal/Web/Desktop)",
+        #     state=controller.model.is_visual_notifications_enabled(stream_id),
+        #     checked_symbol=CHECK_MARK,
+        # )
+        # urwid.connect_signal(
+        #     visual_notification, "change", self.toggle_visual_notification
+        # )
+
+        # footlinks, footlinks_width = MessageBox.footlinks_view(
+        #     message_links=message_links,
+        #     maximum_footlinks=10,  # Show 'all', as no other way to add them
+        #     padded=False,
+        #     wrap="space",
+        # )
+
+        # # Manual because calculate_table_widths does not support checkboxes.
+        # # Add 4 to checkbox label to accommodate the checkbox itself.
+        # popup_width = max(
+        #     popup_width,
+        #     len(muted_setting.label) + 4,
+        #     len(pinned_setting.label) + 4,
+        #     desc.pack()[0],
+        #     footlinks_width,
+        #     len(visual_notification.label) + 4,
+        # )
+        # visual_notification_setting = [visual_notification]
+        # # If notifications is not configured or enabled by the user, then
+        # # disable the checkbox and mention it explicitly with a suffix text
+        # if not self.controller.notify_enabled:
+        #     visual_notification_setting = [
+        #         urwid.WidgetDisable(
+        #             urwid.AttrMap(visual_notification, "widget_disabled")
+        #         ),
+        #         urwid.Text(
+        #             ("popup_important", "    [notifications not configured or enabled]")
+        #         ),
+        #     ]
+        # self.widgets = self.make_table_with_categories(
+        #     stream_info_content, column_widths
+        # )
+
+        # # Stream description.
+        # self.widgets.insert(0, desc)
+        # desc_newline = 1
+        # if footlinks:
+        #     self.widgets.insert(1, footlinks)
+        #     desc_newline = 2
+        # self.widgets.insert(desc_newline, urwid.Text(""))  # Add a newline.
+
+        # self.widgets.append(muted_setting)
+        # self.widgets.append(pinned_setting)
+        # self.widgets.extend(visual_notification_setting)
+        # super().__init__(controller, self.widgets, "STREAM_DESC", popup_width, title)
+
+
+        
 
 
 class StreamMembersView(PopUpView):
@@ -1598,6 +1828,7 @@ class MsgInfoView(PopUpView):
             msg_info.append(("Reactions", list(grouped_reactions.items())))
 
         popup_width, column_widths = self.calculate_table_widths(msg_info, len(title))
+        # pprint.pprint(msg_info)
         widgets = self.make_table_with_categories(msg_info, column_widths)
 
         # To keep track of buttons (e.g., button links) and to facilitate
@@ -1628,6 +1859,7 @@ class MsgInfoView(PopUpView):
             slice_index = len(msg_info[0][1]) + 2
             slice_index += sum([len(w) + 2 for w in button_widgets])
             button_widgets.append(message_links)
+            # pprint.pprint(button_widgets)
 
             widgets = (
                 widgets[:slice_index] + message_link_widgets + widgets[slice_index:]

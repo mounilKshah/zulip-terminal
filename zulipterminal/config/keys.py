@@ -274,6 +274,11 @@ KEY_BINDINGS: 'OrderedDict[str, KeyBinding]' = OrderedDict([
         'excluded_from_random_tips': True,
         'key_category': 'msg_actions',
     }),
+    ('STREAM_SUBSCRIBE', {
+        'keys': ['u'],
+        'help_text': 'Subscribe/unsubscribe popup',
+        'key_category': 'stream_list',
+    }),
     ('STREAM_DESC', {
         'keys': ['i'],
         'help_text': 'Show/hide stream information & modify settings',

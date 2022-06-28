@@ -68,6 +68,7 @@
 | :--- | :---: |
 |Toggle topics in a stream|<kbd>t</kbd>|
 |Mute/unmute Streams|<kbd>m</kbd>|
+|Subscribe/unsubscribe popup|<kbd>u</kbd>|
 |Show/hide stream information & modify settings|<kbd>i</kbd>|
 |Show/hide stream members (from stream information)|<kbd>m</kbd>|
 |Copy stream email to clipboard (from stream information)|<kbd>c</kbd>|

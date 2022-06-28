@@ -1,4 +1,5 @@
 import json
+from pprint import pprint
 import time
 from collections import OrderedDict, defaultdict
 from concurrent.futures import Future, ThreadPoolExecutor, wait
@@ -168,8 +169,19 @@ class Model:
         self.unpinned_streams: List[StreamData] = []
         self.visual_notified_streams: Set[int] = set()
 
-        self._subscribe_to_streams(self.initial_data["subscriptions"])
+        self.unsubscribed_stream_dict: Dict[int, Any] = {}
+        self.never_subscribedstream_dict: Dict[int, Any] = {}
 
+        self.unsubscribed_streams: Set[int] = set()
+        self.subscribed_streams: Set[int] = set()
+        self._subscribe_to_streams(self.initial_data["subscriptions"])
+        self._unsubscribed_recently(self.initial_data["unsubscribed"])
+        # self._never_subscribed(self.initial_data.get("never_subscribed"))
+        print("printing self.unsubscribed_streams")
+        pprint(self.unsubscribed_streams)
+
+        # self.unsubscribed_stream_dict.sort(key=lambda s: s["name"].lower())
+        # self.never_subscribedstream_dict.sort(key=lambda s: s["name"].lower())
         # NOTE: The date_created field of stream has been added in feature
         # level 30, server version 4. For consistency we add this field
         # on server iterations even before this with value of None.
@@ -785,6 +797,61 @@ class Model:
     def is_muted_stream(self, stream_id: int) -> bool:
         return stream_id in self.muted_streams
 
+    def is_subscribed_stream(self, stream_id: int) -> bool:
+        # result = self.client.get_subscriptions()
+        # subscribed_streams = result["subscriptions"]
+        # for stream_in_subscriptions in subscribed_streams:
+        #     print(stream_in_subscriptions["name"])
+        # print("User ID: ") # 22386
+        # result = self.client.get_streams()
+
+        # stream_list_temp = result["streams"]
+        # for stream_names in stream_list_temp:
+        #     stream_id = stream_names["stream_id"]
+        #     subscription_status = self.client.call_endpoint(url=f"/users/22386/subscriptions/{stream_id}", method="GET")
+        #     if subscription_status["is_subscribed"]:
+                # print(stream_names["name"])
+
+        # pprint.pprint(result)
+        return stream_id in self.muted_streams
+
+    def get_all_streams_in_org(self):
+        all_streams = self.client.get_streams()
+        print("Times for ALL streams in org: ")
+        start = time.process_time()
+        list_of_streams = all_streams["streams"]
+        print(time.process_time() - start)
+        return list_of_streams
+
+    def get_subscribed_streams(self):
+        print("Times for SUBSCRIBED streams in org: ")
+        start = time.process_time()
+        subscribed_streams = self.client.get_subscriptions()
+        print(time.process_time() - start)
+        return subscribed_streams["subscriptions"]
+    
+    def subscription_status(self, stream_id: Optional[int] = None):
+        result = self.client.call_endpoint(
+            url=f"/users/{self.user_id}/subscriptions/{stream_id}",
+            method="GET",
+            )
+        return result["is_subscribed"]
+
+    def get_only_stream_name_id(self, stream_dict_list):
+        required_keys = ['stream_id', 'name']
+        # dict2 = {x:[x] for x in stream_dict_list}
+        final_dict = {}
+        for single_dict in stream_dict_list:
+            # dict2 = {
+            #     x: single_dict[x] for x in single_dict
+            # }
+            final_dict[single_dict["name"]] = single_dict["stream_id"]
+        
+        # pprint.pprint(final_dict)
+        return final_dict
+        # return list(map(itemgetter(0), stream_dict_list.items()))
+        # return [*stream_dict_list]
+
     def is_muted_topic(self, stream_id: int, topic: str) -> bool:
         """
         Returns True if topic is muted via muted_topics.
@@ -1082,6 +1149,87 @@ class Model:
             new_visual_notified_streams
         )
 
+    def send_unsubscribed_list(self, unsubscribed_list: List[Subscription]):
+        def make_reduced_stream_data(stream: Subscription) -> StreamData:
+            # stream_id has been changed to id.
+            return StreamData(
+                {
+                    "name": stream["name"],
+                    "id": stream["stream_id"],
+                    "color": stream["color"],
+                    "stream_access_type": self.stream_access_type(stream["stream_id"]),
+                    "description": stream["description"],
+                }
+            )
+        new_list_of_unsubs = []
+        for unsubscribed_stream in unsubscribed_list:
+            single_stream = make_reduced_stream_data(unsubscribed_stream)
+            new_list_of_unsubs.append(single_stream)
+        
+        return new_list_of_unsubs
+
+
+    def _unsubscribed_recently(self, unsubscribed_list: List[Subscription]) -> None:
+
+        # new_pinned_streams = []
+        # new_unpinned_streams = []
+        # new_muted_streams = set()
+        new_unsubscribed_stream = set()
+
+        for unsubscribed_stream in unsubscribed_list:
+            # Canonicalize color formats, since zulip server versions may use
+            # different formats
+            unsubscribed_stream["color"] = canonicalize_color(unsubscribed_stream["color"])
+
+            self.unsubscribed_stream_dict[unsubscribed_stream["stream_id"]] = unsubscribed_stream
+            # streamData = make_reduced_stream_data(unsubscribed_stream)
+            new_unsubscribed_stream.add(unsubscribed_stream["stream_id"])
+            # if subscription["pin_to_top"]:
+            #     new_pinned_streams.append(streamData)
+            # else:
+            #     new_unpinned_streams.append(streamData)
+            # if not subscription["in_home_view"]:
+            #     new_muted_streams.add(subscription["stream_id"])
+        
+        if new_unsubscribed_stream:
+            self.unsubscribed_streams = self.unsubscribed_streams.union(new_unsubscribed_stream)
+        # self.unsubscribed_stream_dict.sort(key=lambda s: s["name"].lower())
+
+        # if new_pinned_streams:
+        #     self.pinned_streams.extend(new_pinned_streams)
+        #     sort_streams(self.pinned_streams)
+        # if new_unpinned_streams:
+        #     self.unpinned_streams.extend(new_unpinned_streams)
+        #     sort_streams(self.unpinned_streams)
+
+        # self.muted_streams = self.muted_streams.union(new_muted_streams)
+
+    def _never_subscribed(self, subscriptions: List[Subscription]) -> None:
+        def make_reduced_stream_data(stream: Subscription) -> StreamData:
+            # stream_id has been changed to id.
+            return StreamData(
+                {
+                    "name": stream["name"],
+                    "id": stream["stream_id"],
+                    "color": stream["color"],
+                    "stream_access_type": self.stream_access_type(stream["stream_id"]),
+                    "description": stream["description"],
+                }
+            )
+
+        new_muted_streams = set()
+
+        for subscription in subscriptions:
+            # Canonicalize color formats, since zulip server versions may use
+            # different formats
+            subscription["color"] = canonicalize_color(subscription["color"])
+
+            self.stream_dict[subscription["stream_id"]] = subscription
+            if not subscription["in_home_view"]:
+                new_muted_streams.add(subscription["stream_id"])
+
+        self.muted_streams = self.muted_streams.union(new_muted_streams)
+
     def _group_info_from_realm_user_groups(
         self, groups: List[Dict[str, Any]]
     ) -> List[str]:
@@ -1102,6 +1250,7 @@ class Model:
         return user_group_names
 
     def toggle_stream_muted_status(self, stream_id: int) -> None:
+        print("inside model.toggle_stream_muted_status()")
         request = [
             {
                 "stream_id": stream_id,
@@ -1111,7 +1260,54 @@ class Model:
             }
         ]
         response = self.client.update_subscription_settings(request)
+
+        # print("using logic from model.toggle_stream_subscription()")
+        # if not self.is_user_subscribed_to_stream(stream_id):
+        #     stream_to_be_subscribed = {
+        #         "name": self.unsubscribed_stream_dict[stream_id]["name"]
+        #     }
+        #     list_of_streams = []
+        #     list_of_streams.append(stream_to_be_subscribed)
+        #     subscribe_response = self.client.add_subscriptions(
+        #         streams=list_of_streams
+        #     )
+        #     print("TO_BE_SUBSCRIBED subscribe_response from function: model.toggle_stream_subscription")
+        #     pprint(subscribe_response)
+        #     display_error_if_present(subscribe_response, self.controller)
+        # else:
+        #     stream_to_be_unsubscribed = [self.stream_dict[stream_id]["name"]]
+        #     subscribe_response = self.client.remove_subscriptions(stream_to_be_unsubscribed)
+        #     print("TO_BE_UNSUBSCRIBED subscribe_response from function: model.toggle_stream_subscription")
+        #     pprint(subscribe_response)
+        #     print(self.unsubscribed_streams)
+        #     display_error_if_present(subscribe_response, self.controller)
+
         display_error_if_present(response, self.controller)
+
+    def toggle_stream_subscription(self, stream_id: int) -> None:
+        if not self.is_user_subscribed_to_stream(stream_id):
+            stream_to_be_subscribed = {
+                "name": self.unsubscribed_stream_dict[stream_id]["name"]
+            }
+            list_of_streams = []
+            list_of_streams.append(stream_to_be_subscribed)
+            subscribe_response = self.client.add_subscriptions(
+                streams=list_of_streams
+            )
+            print("TO_BE_SUBSCRIBED subscribe_response from function: model.toggle_stream_subscription")
+            pprint(subscribe_response)
+            display_error_if_present(subscribe_response, self.controller)
+        else:
+            stream_to_be_unsubscribed = [self.stream_dict[stream_id]["name"]]
+            subscribe_response = self.client.remove_subscriptions(stream_to_be_unsubscribed)
+            print("TO_BE_UNSUBSCRIBED subscribe_response from function: model.toggle_stream_subscription")
+            pprint(subscribe_response)
+            print(self.unsubscribed_streams)
+            display_error_if_present(subscribe_response, self.controller)
+
+            # self.stream_dict[stream_id]["name"]
+            # pass
+        # display_error_if_present(response, self.controller)
 
     def stream_id_from_name(self, stream_name: str) -> int:
         for stream_id, stream in self.stream_dict.items():
@@ -1169,6 +1365,7 @@ class Model:
                                         pinning/unpinning streams)
         """
         assert event["type"] == "subscription"
+        # pprint.pprint(event)
 
         def get_stream_by_id(streams: List[StreamData], stream_id: int) -> StreamData:
             for stream in streams:
@@ -1177,6 +1374,7 @@ class Model:
             raise RuntimeError("Invalid stream id.")
 
         if event["op"] == "update":
+            print("inside model._handle_subscription_event()")
             if hasattr(self.controller, "view"):
                 if event.get("property", None) == "in_home_view":
                     stream_id = event["stream_id"]
@@ -1239,6 +1437,118 @@ class Model:
                     else:
                         for user_id in user_ids:
                             subscribers.remove(user_id)
+
+        elif event["op"] == "remove":
+            print("REMOVE inside model._handle_subscription_event()")
+            if hasattr(self.controller, "view"):
+                # if event.get("property", None) == "in_home_view":
+                
+                stream_id = event["subscriptions"][0]["stream_id"]
+                print(stream_id)
+                pprint(self.stream_dict[stream_id])
+                # pprint(self.stream_dict)
+
+                # FIXME: Does this always contain the stream_id?
+                # stream_button = self.controller.view.stream_id_to_button[stream_id]
+
+                # unread_count = self.unread_counts["streams"][stream_id]
+                # NOTE: It can either be unmuted or muted
+                # if stream_id in self.muted_streams:
+                #     self.controller.update_screen()
+                # else:
+                #     self.unread_counts["all_msg"] -= unread_count
+                self.unsubscribed_stream_dict[stream_id] = self.stream_dict[stream_id]
+                # self.unsubscribed_stream_dict.sort(key=lambda s: s["name"].lower())
+                self.stream_dict.pop(stream_id)
+                self.controller.update_screen()
+
+                # if event["value"]:  # Unmuting streams
+                #     self.muted_streams.remove(stream_id)
+                #     self.unread_counts["all_msg"] += unread_count
+                #     stream_button.mark_unmuted(unread_count)
+                # else:  # Muting streams
+                #     self.muted_streams.add(stream_id)
+                #     self.unread_counts["all_msg"] -= unread_count
+                #     stream_button.mark_muted()
+                # self.controller.update_screen()
+                if event.get("property", None) == "pin_to_top":
+                    stream_id = event["stream_id"]
+
+                    # FIXME: Does this always contain the stream_id?
+                    stream_button = self.controller.view.stream_id_to_button[stream_id]
+
+                    if event["value"]:
+                        stream = get_stream_by_id(self.unpinned_streams, stream_id)
+                        if stream:
+                            self.unpinned_streams.remove(stream)
+                            self.pinned_streams.append(stream)
+                    else:
+                        stream = get_stream_by_id(self.pinned_streams, stream_id)
+                        if stream:
+                            self.pinned_streams.remove(stream)
+                            self.unpinned_streams.append(stream)
+                    sort_streams(self.unpinned_streams)
+                    sort_streams(self.pinned_streams)
+                    self.controller.view.left_panel.update_stream_view()
+                    self.controller.update_screen()
+        elif event["op"] == "add":
+            print("---ADD inside model._handle_subscription_event()--")
+            if hasattr(self.controller, "view"):
+                stream_id = event["subscriptions"][0]["stream_id"]
+                print(stream_id)
+                pprint(self.unsubscribed_stream_dict[stream_id])
+                # pprint(self.stream_dict)
+
+                # FIXME: Does this always contain the stream_id?
+                # stream_button = self.controller.view.stream_id_to_button[stream_id]
+
+                unread_count = self.unread_counts["streams"][stream_id]
+                # NOTE: It can either be unmuted or muted
+                # if stream_id in self.muted_streams:
+                #     self.controller.update_screen()
+                # else:
+                #     self.unread_counts["all_msg"] -= unread_count
+                self.stream_dict[stream_id] = self.unsubscribed_stream_dict[stream_id]
+                self.unsubscribed_stream_dict.pop(stream_id)
+                # self.controller.update_screen()
+
+                # if event["value"]:  # Unmuting streams
+                #     self.muted_streams.remove(stream_id)
+                self.unread_counts["all_msg"] += unread_count
+                #     stream_button.mark_unmuted(unread_count)
+                # else:  # Muting streams
+                #     self.muted_streams.add(stream_id)
+                #     self.unread_counts["all_msg"] -= unread_count
+                #     stream_button.mark_muted()
+                self.controller.update_screen()
+                if event.get("property", None) == "pin_to_top":
+                    stream_id = event["stream_id"]
+
+                    # FIXME: Does this always contain the stream_id?
+                    stream_button = self.controller.view.stream_id_to_button[stream_id]
+
+                    if event["value"]:
+                        stream = get_stream_by_id(self.unpinned_streams, stream_id)
+                        if stream:
+                            self.unpinned_streams.remove(stream)
+                            self.pinned_streams.append(stream)
+                    else:
+                        stream = get_stream_by_id(self.pinned_streams, stream_id)
+                        if stream:
+                            self.pinned_streams.remove(stream)
+                            self.unpinned_streams.append(stream)
+                    sort_streams(self.unpinned_streams)
+                    sort_streams(self.pinned_streams)
+                    self.controller.view.left_panel.update_stream_view()
+                    self.controller.update_screen()
+                elif event.get("property", None) == "desktop_notifications":
+                    stream_id = event["stream_id"]
+
+                    if event["value"]:
+                        self.visual_notified_streams.add(stream_id)
+                    else:
+                        self.visual_notified_streams.discard(stream_id)
+
 
     def _handle_typing_event(self, event: Event) -> None:
         """
@@ -1742,6 +2052,14 @@ class Model:
             self.max_message_id = response["max_message_id"]
             self.queue_id = response["queue_id"]
             self.last_event_id = response["last_event_id"]
+            # print("Printing UNSUBSCRIBED:")
+            # for stream in self.initial_data.get("unsubscribed"):
+            #     print(stream["name"])
+            # # pprint(self.initial_data.get("unsubscribed"))
+            # print("Printing NEVER_SUBSCRIBED")
+            # for stream in self.initial_data.get("never_subscribed"):
+            #     print(stream["name"])
+            # pprint(self.initial_data.get("never_subscribed"))
             return ""
         return response["msg"]
 
@@ -1762,6 +2080,8 @@ class Model:
             response = self.client.get_events(
                 queue_id=queue_id, last_event_id=last_event_id
             )
+            print("Response from model.poll_for_events()")
+            # pprint(response)
 
             if "error" in response["result"]:
                 if response["msg"].startswith("Bad event queue id:"):
@@ -1782,6 +2102,8 @@ class Model:
                 last_event_id = max(last_event_id, int(event["id"]))
                 if event["type"] in self.event_actions:
                     try:
+                        print("printing event under the loop in model.poll_for_events()")
+                        print(event["op"])
                         self.event_actions[event["type"]](event)
                     except Exception:
                         import sys
