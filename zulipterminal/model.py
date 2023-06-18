@@ -543,6 +543,21 @@ class Model:
         else:
             raise RuntimeError("Empty recipients list.")
 
+    def upload_file(self, stream: str, topic: str,):
+        # Hard coded the file path for now
+        with open('upload_trial.txt', "rb") as fp:
+            response = self.client.upload_file(fp)
+            # Used the URI returned from the /api/upload-file endpoint
+            # and sent it to the content of a message
+            composition = StreamComposition(
+                type="stream",
+                to=stream,
+                subject=topic,
+                content="This is the [uploaded file]({}) from the root directory of ZT repository".format(response["uri"]),
+            )
+            response = self.client.send_message(composition)
+            display_error_if_present(response, self.controller)
+
     def send_stream_message(self, stream: str, topic: str, content: str) -> bool:
         composition = StreamComposition(
             type="stream",
@@ -553,6 +568,8 @@ class Model:
         response = self.client.send_message(composition)
         display_error_if_present(response, self.controller)
         message_was_sent = response["result"] == "success"
+        # Uploading the file in the immediate next message
+        self.upload_file(stream, topic)
         if message_was_sent:
             notify_if_message_sent_outside_narrow(composition, self.controller)
         return message_was_sent
