@@ -126,7 +126,13 @@ class TestModel:
         assert "user_settings" not in initial_data  # we add it in tests
 
         if sptn is not None:
-            initial_data["user_settings"] = {"send_private_typing_notifications": sptn}
+            initial_data["user_settings"] = {
+                "send_private_typing_notifications": sptn,
+                "twenty_four_hour_time": initial_data["twenty_four_hour_time"],
+                "pm_content_in_desktop_notifications": initial_data[
+                    "pm_content_in_desktop_notifications"
+                ],
+            }
 
         mocker.patch(MODEL + ".get_messages", return_value="")
         self.client.register = mocker.Mock(return_value=initial_data)
