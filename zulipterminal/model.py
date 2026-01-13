@@ -138,8 +138,6 @@ class Model:
             "muted_topics",
             "realm_user",  # Enables cross_realm_bots
             "realm_user_groups",
-            "update_global_notifications",
-            "update_display_settings",
             "user_settings",
             "realm_emoji",
             "custom_profile_fields",
@@ -157,8 +155,6 @@ class Model:
             "subscription": self._handle_subscription_event,
             "typing": self._handle_typing_event,
             "update_message_flags": self._handle_update_message_flags_event,
-            "update_global_notifications": self._handle_update_global_notifications_event,  # noqa: E501
-            "update_display_settings": self._handle_update_display_settings_event,
             "user_settings": self._handle_user_settings_event,
             "realm_emoji": self._handle_update_emoji_event,
             "realm_user": self._handle_realm_user_event,
@@ -2056,29 +2052,22 @@ class Model:
         # Update the setting (property) to the value, but only if already initialized
         if event["property"] in self._user_settings:
             setting = event["property"]
+            if setting == "twenty_four_hour_time":
+                self._update_display()
             self._user_settings[setting] = event["value"]
 
-    def _handle_update_global_notifications_event(self, event: Event) -> None:
-        assert event["type"] == "update_global_notifications"
-        to_update = event["notification_name"]
-        if to_update == "pm_content_in_desktop_notifications":
-            self._user_settings[to_update] = event["setting"]
-
-    def _handle_update_display_settings_event(self, event: Event) -> None:
+    def _update_display(self) -> None:
         """
         Handle change to user display setting (Eg: Time format)
         """
-        assert event["type"] == "update_display_settings"
         view = self.controller.view
-        if event["setting_name"] == "twenty_four_hour_time":
-            self._user_settings["twenty_four_hour_time"] = event["setting"]
-            for msg_w in view.message_view.log:
-                msg_box = msg_w.original_widget
-                msg_id = msg_box.message["id"]
-                last_msg = msg_box.last_message
-                msg_pos = view.message_view.log.index(msg_w)
-                msg_w_list = create_msg_box_list(self, [msg_id], last_message=last_msg)
-                view.message_view.log[msg_pos] = msg_w_list[0]
+        for msg_w in view.message_view.log:
+            msg_box = msg_w.original_widget
+            msg_id = msg_box.message["id"]
+            last_msg = msg_box.last_message
+            msg_pos = view.message_view.log.index(msg_w)
+            msg_w_list = create_msg_box_list(self, [msg_id], last_message=last_msg)
+            view.message_view.log[msg_pos] = msg_w_list[0]
         self.controller.update_screen()
 
     def _handle_realm_user_event(self, event: Event) -> None:

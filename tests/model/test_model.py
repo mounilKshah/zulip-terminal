@@ -247,8 +247,6 @@ class TestModel:
             "subscription",
             "typing",
             "update_message_flags",
-            "update_global_notifications",
-            "update_display_settings",
             "user_settings",
             "realm_emoji",
             "realm_user",
@@ -263,8 +261,6 @@ class TestModel:
             "muted_topics",
             "realm_user",
             "realm_user_groups",
-            "update_global_notifications",
-            "update_display_settings",
             "user_settings",
             "realm_emoji",
             "custom_profile_fields",
@@ -4444,26 +4440,29 @@ class TestModel:
         model._handle_user_settings_event(event)
         assert model.user_settings()[setting] == value
 
-    @pytest.mark.parametrize("setting", [True, False])
-    def test_update_pm_content_in_desktop_notifications(self, mocker, model, setting):
-        setting_name = "pm_content_in_desktop_notifications"
+    @pytest.mark.parametrize("value", [True, False])
+    def test_update_pm_content_in_desktop_notifications(self, mocker, model, value):
+        setting = "pm_content_in_desktop_notifications"
         event = {
-            "type": "update_global_notifications",
-            "notification_name": setting_name,
-            "setting": setting,
+            "type": "user_settings",
+            "op": "update",
+            "property": setting,
+            "value": value,
         }
-        model._user_settings[setting_name] = not setting
+        model._user_settings[setting] = not value
 
-        model._handle_update_global_notifications_event(event)
+        model._handle_user_settings_event(event)
 
-        assert model.user_settings()[setting_name] == setting
+        assert model.user_settings()[setting] == event["value"]
 
-    @pytest.mark.parametrize("setting", [True, False])
-    def test_update_twenty_four_hour_format(self, mocker, model, setting):
+    @pytest.mark.parametrize("value", [True, False])
+    def test_update_twenty_four_hour_format(self, mocker, model, value):
+        setting = "twenty_four_hour_time"
         event = {
-            "type": "update_display_settings",
-            "setting_name": "twenty_four_hour_time",
-            "setting": setting,
+            "type": "user_settings",
+            "op": "update",
+            "property": setting,
+            "value": value,
         }
         first_msg_w = mocker.Mock()
         second_msg_w = mocker.Mock()
@@ -4471,11 +4470,11 @@ class TestModel:
         second_msg_w.original_widget.message = {"id": 2}
         self.controller.view.message_view = mocker.Mock(log=[first_msg_w, second_msg_w])
         create_msg_box_list = mocker.patch(MODULE + ".create_msg_box_list")
-        model._user_settings["twenty_four_hour_format"] = not setting
+        model._user_settings["twenty_four_hour_format"] = not value
 
-        model._handle_update_display_settings_event(event)
+        model._handle_user_settings_event(event)
 
-        assert model.user_settings()["twenty_four_hour_time"] == event["setting"]
+        assert model.user_settings()["twenty_four_hour_time"] == event["value"]
         assert create_msg_box_list.call_count == len(
             self.controller.view.message_view.log
         )

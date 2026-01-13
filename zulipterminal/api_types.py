@@ -589,7 +589,11 @@ class UpdateRealmEmojiEvent(TypedDict):
 # -----------------------------------------------------------------------------
 # See https://zulip.com/api/get-events#user_settings-update
 # This is specifically only those supported by ZT
-SupportedUserSettings = Literal["send_private_typing_notifications"]
+SupportedUserSettings = Literal[
+    "send_private_typing_notifications",
+    "twenty_four_hour_time",
+    "pm_content_in_desktop_notifications",
+]
 
 
 class UpdateUserSettingsEvent(TypedDict):
@@ -597,30 +601,6 @@ class UpdateUserSettingsEvent(TypedDict):
     op: Literal["update"]
     property: SupportedUserSettings
     value: Any
-
-
-# -----------------------------------------------------------------------------
-# See https://zulip.com/api/get-events#update_global_notifications
-# This is specifically only those supported by ZT
-SupportedGlobalNotificationSettings = Literal["pm_content_in_desktop_notifications"]
-
-
-class UpdateGlobalNotificationsEvent(TypedDict):
-    type: Literal["update_global_notifications"]
-    notification_name: SupportedGlobalNotificationSettings
-    setting: Any
-
-
-# -----------------------------------------------------------------------------
-# See https://zulip.com/api/get-events#update_display_settings
-# This is specifically only those supported by ZT
-SupportedDisplaySettings = Literal["twenty_four_hour_time"]
-
-
-class UpdateDisplaySettingsEvent(TypedDict):
-    type: Literal["update_display_settings"]
-    setting_name: SupportedDisplaySettings
-    setting: bool
 
 
 # -----------------------------------------------------------------------------
@@ -634,10 +614,8 @@ Event = Union[
     SubscriptionPeerAddRemoveEvent,
     TypingEvent,
     UpdateMessageFlagsEvent,
-    UpdateDisplaySettingsEvent,
     UpdateRealmEmojiEvent,
     UpdateUserSettingsEvent,
-    UpdateGlobalNotificationsEvent,
     RealmUserEvent,
 ]
 
